@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:studybuddy/ui/auth/login.dart';
 import 'package:studybuddy/ui/main_screen.dart';
 
 void main() {
@@ -12,7 +13,7 @@ class StudyBuddy extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: const MainScreen(),
+      home: const Login(),
     );
   }
 }
