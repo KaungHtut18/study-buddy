@@ -3,31 +3,32 @@ package com.mfu.studybuddy.model;
 import java.util.ArrayList;
 import java.util.List;
 
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
-@Getter
-@Setter
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Table(name = "app_user", 
+    indexes ={
+        @Index(name = "idx_userName", columnList = "userName"),
+        @Index(name = "idx_email", columnList = "email")
+    })
 public class User{
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
     private String email;
+    private String userName;
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
-    private String description;
+    private String description = "";
 
     @ElementCollection
     private List<String> skills = new ArrayList<>();
@@ -40,7 +41,7 @@ public class User{
         name = "user_matches",
         joinColumns = @JoinColumn(name = "user_id"),
         inverseJoinColumns = @JoinColumn(name = "matched_user_id")
-    )
+    )   
     private List<User> matchedUsers = new ArrayList<>();
     
     @ManyToMany
@@ -50,4 +51,12 @@ public class User{
         inverseJoinColumns = @JoinColumn(name = "interested_user_id")
     )
     private List<User> interestedUsers = new ArrayList<>();
+
+    public User(String email,String userName,String password)
+    {
+        this.email = email;
+        this.userName = userName;
+        this.password = password;
+    }
+
 }

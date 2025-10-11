@@ -19,9 +19,9 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain apSecurityFilterChain(HttpSecurity http) throws Exception{
         http
-            .securityMatcher("/api/**")
             .addFilterBefore(userIdFilter, UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/security/**").permitAll()
                 .anyRequest().authenticated()
             )
             .csrf(csrf -> csrf.disable());

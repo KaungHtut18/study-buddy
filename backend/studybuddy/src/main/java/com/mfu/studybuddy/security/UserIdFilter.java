@@ -28,41 +28,51 @@ public class UserIdFilter extends OncePerRequestFilter {
                                   FilterChain filterChain) throws ServletException, IOException {
         
         String requestUri = request.getRequestURI();
-        String userId = request.getHeader("User-ID");
-        
-        logger.info("Processing request to: {} with User-ID header: {}", requestUri, userId);
-        
-        if (userId == null || userId.isEmpty()) {
-            logger.warn("Missing User-ID header for request to: {}", requestUri);
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("Missing User-ID header");
-            return;
+
+        if (requestUri.startsWith("/security")) {
+            logger.info("Calling security endpoint, passing through filter");
+            filterChain.doFilter(request, response);
         }
-        
-        try {
-            Long id = Long.parseLong(userId);
-            logger.debug("Parsed User-ID: {} for request to: {}", id, requestUri);
+
+        else{
+            String userId = request.getHeader("User-ID");
             
-            boolean userExists = userRepository.existsById(id);
+            logger.info("Processing request to: {} with User-ID header: {}", requestUri, userId);
             
-            if (!userExists) {
-                logger.warn("Invalid User-ID: {} - user not found in database for request to: {}", id, requestUri);
+            if (userId == null || userId.isEmpty()) {
+                logger.warn("Missing User-ID header for request to: {}", requestUri);
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("Invalid User-ID");
+                response.getWriter().write("Missing User-ID header");
                 return;
             }
             
-            logger.info("Successfully authenticated User-ID: {} for request to: {}", id, requestUri);
-            
-            // Add user ID to request attributes for later use
-            request.setAttribute("userId", id);
-            
-        } catch (NumberFormatException e) {
-            logger.error("Invalid User-ID format: '{}' for request to: {} - {}", userId, requestUri, e.getMessage());
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            response.getWriter().write("Invalid User-ID format");
-            return;
+            try {
+                Long id = Long.parseLong(userId);
+                logger.debug("Parsed User-ID: {} for request to: {}", id, requestUri);
+                
+                boolean userExists = userRepository.existsById(id);
+                
+                if (!userExists) {
+                    logger.warn("Invalid User-ID: {} - user not found in database for request to: {}", id, requestUri);
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.getWriter().write("Invalid User-ID");
+                    return;
+                }
+                
+                logger.info("Successfully authenticated User-ID: {} for request to: {}", id, requestUri);
+                
+                // Add user ID to request attributes for later use
+                request.setAttribute("userId", id);
+                
+            } catch (NumberFormatException e) {
+                logger.error("Invalid User-ID format: '{}' for request to: {} - {}", userId, requestUri, e.getMessage());
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                response.getWriter().write("Invalid User-ID format");
+                return;
+            }
         }
+
+        
         
         filterChain.doFilter(request, response);
     }
