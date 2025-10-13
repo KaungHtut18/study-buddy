@@ -1,9 +1,13 @@
 package com.mfu.studybuddy.service;
 
+import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.mfu.studybuddy.model.User;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import com.mfu.studybuddy.repository.UserRepository;
@@ -36,5 +40,38 @@ public class UserService {
             return false;
         }
         
+    }
+
+    public Optional<User> getUserByEmail(String email) {
+        return userRepository.findByEmail(email);
+    }
+
+    public Optional<User> getUserById(Long id){
+        return userRepository.findById(id);
+    }
+
+    @Transactional
+    public void addInterestedUser(Long targetUserId, Long interestedUserId)
+    {
+       
+        User targetUser = userRepository.findById(targetUserId).get();
+        User interestedUser = userRepository.findById(interestedUserId).get();
+         //Check if the targetUser already have the interestedUser in their interested list
+        boolean isAlreadyIntersted = userRepository.existsByIdAndInterestedUsers_Id(targetUserId, interestedUserId);
+        if (isAlreadyIntersted){
+            //TRUE: remove the interestedUser from interested list and put it in matched list for the target user
+            //skip putting target user in interested list and  put it in matched list of interested user directly
+            targetUser.getInterestedUsers().removeIf(user -> user.getId().equals(interestedUserId));
+
+            targetUser.getMatchedUsers().add(interestedUser);
+            interestedUser.getMatchedUsers().add(targetUser);
+        }
+        else{
+            //FALSE:
+            interestedUser.getInterestedUsers().add(targetUser);
+        }
+        // Update both users
+        userRepository.save(targetUser);
+        userRepository.save(interestedUser);       
     }
 }

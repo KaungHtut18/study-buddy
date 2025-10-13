@@ -21,11 +21,12 @@ public class SecurityConfig {
         http
             .addFilterBefore(userIdFilter, UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/security/**").permitAll()
+                .requestMatchers("/security/**", "/h2-console/**")
+                .permitAll()
                 .anyRequest().authenticated()
             )
-            .csrf(csrf -> csrf.disable());
-
+            .csrf(csrf -> csrf.disable())
+            .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable())); // Updated for H2 console
         return http.build();
     }
 }

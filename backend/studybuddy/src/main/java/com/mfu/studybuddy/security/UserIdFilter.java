@@ -1,10 +1,14 @@
 package com.mfu.studybuddy.security;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -28,13 +32,17 @@ public class UserIdFilter extends OncePerRequestFilter {
                                   FilterChain filterChain) throws ServletException, IOException {
         
         String requestUri = request.getRequestURI();
+        logger.info("Filter processing URI: {}", requestUri);
 
-        if (requestUri.startsWith("/security")) {
-            logger.info("Calling security endpoint, passing through filter");
+        // Skip filter for H2 console and security endpoints
+        if (requestUri.startsWith("/h2-console") || requestUri.startsWith("/security")) {
+            logger.info("Skipping filter for URI: {}", requestUri);
             filterChain.doFilter(request, response);
+            return;
         }
 
-        else{
+        if (requestUri.startsWith("/api")) {
+            logger.info("Processing API request: {}", requestUri);
             String userId = request.getHeader("User-ID");
             
             logger.info("Processing request to: {} with User-ID header: {}", requestUri, userId);
@@ -59,9 +67,16 @@ public class UserIdFilter extends OncePerRequestFilter {
                     return;
                 }
                 
-                logger.info("Successfully authenticated User-ID: {} for request to: {}", id, requestUri);
+                // SET SPRING SECURITY CONTEXT - THIS IS THE KEY!
+                UsernamePasswordAuthenticationToken authentication = 
+                    new UsernamePasswordAuthenticationToken(
+                        id.toString(), 
+                        null, 
+                        List.of(new SimpleGrantedAuthority("ROLE_USER"))
+                    );
+                SecurityContextHolder.getContext().setAuthentication(authentication);
                 
-                // Add user ID to request attributes for later use
+                logger.info("Successfully authenticated User-ID: {} and set security context for request to: {}", id, requestUri);
                 request.setAttribute("userId", id);
                 
             } catch (NumberFormatException e) {
@@ -70,9 +85,9 @@ public class UserIdFilter extends OncePerRequestFilter {
                 response.getWriter().write("Invalid User-ID format");
                 return;
             }
+        } else {
+            logger.info("Non-API request, continuing filter chain: {}", requestUri);
         }
-
-        
         
         filterChain.doFilter(request, response);
     }
