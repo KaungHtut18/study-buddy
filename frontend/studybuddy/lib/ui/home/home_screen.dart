@@ -69,7 +69,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             SizedBox(height: 20),
             SizedBox(
-              height: MediaQuery.sizeOf(context).height * 0.6,
+              height: MediaQuery.sizeOf(context).height * 0.65,
               child: CardSwiper(
                 allowedSwipeDirection: AllowedSwipeDirection.only(
                   left: true,
