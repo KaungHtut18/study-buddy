@@ -52,6 +52,14 @@ public class User{
     )
     private List<User> interestedUsers = new ArrayList<>();
 
+    @OneToMany(mappedBy = "user1", cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<ChatRoom> chatRoomsAsUser1 = new ArrayList<>();
+    
+    @OneToMany(mappedBy = "user2", cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<ChatRoom> chatRoomsAsUser2 = new ArrayList<>();
+
     public User(String email,String userName,String password)
     {
         this.email = email;
