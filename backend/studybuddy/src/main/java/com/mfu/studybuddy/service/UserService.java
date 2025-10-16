@@ -7,6 +7,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Pageable;
 
 import com.mfu.studybuddy.model.User;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -73,5 +74,38 @@ public class UserService {
         // Update both users
         userRepository.save(targetUser);
         userRepository.save(interestedUser);       
+    }
+
+    public List<User> getUsersPaginated(Long lastId, int count) {
+        Pageable pageable = Pageable.ofSize(count);
+        
+        // Debug: Log total user count
+        long totalUsers = userRepository.count();
+        System.out.println("Total users in database: " + totalUsers);
+        System.out.println("Requested count: " + count + ", lastId: " + lastId);
+        
+        List<User> result;
+        if (lastId == null) {
+            // First request - get first 'count' users ordered by ID
+            result = userRepository.findAllByOrderByIdAsc(pageable);
+        } else {
+            // Subsequent requests - get 'count' users with ID greater than lastId
+            result = userRepository.findByIdGreaterThanOrderByIdAsc(lastId, pageable);
+        }
+        
+        System.out.println("Returned " + result.size() + " users");
+        for (User user : result) {
+            System.out.println("User ID: " + user.getId() + ", Username: " + user.getUserName());
+        }
+        return result;
+    }
+
+    // Method for creating dummy users with known passwords
+    public User createDummyUser(String email, String username, String plainPassword) {
+        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
+        String encryptedPassword = encoder.encode(plainPassword);
+        
+        User user = new User(email, username, encryptedPassword);
+        return userRepository.save(user);
     }
 }

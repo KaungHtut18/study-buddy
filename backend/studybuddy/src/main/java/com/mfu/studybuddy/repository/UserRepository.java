@@ -1,7 +1,9 @@
 package com.mfu.studybuddy.repository;
 
+import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -21,4 +23,8 @@ public interface UserRepository extends JpaRepository<User,Long>{
 
     boolean existsByIdAndInterestedUsers_Id(Long userId, Long interestedUserId);
 
+    // Use proper Spring Data JPA method names for pagination
+    List<User> findAllByOrderByIdAsc(Pageable pageable);
+    
+    List<User> findByIdGreaterThanOrderByIdAsc(Long lastId, Pageable pageable);
 }

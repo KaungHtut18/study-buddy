@@ -1,5 +1,6 @@
 package com.mfu.studybuddy.controller;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -17,6 +18,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.mfu.studybuddy.DTO.ApiResponse;
 import com.mfu.studybuddy.model.User;
 import com.mfu.studybuddy.service.UserService;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 @RestController
 @RequestMapping("/api")
@@ -72,4 +76,30 @@ public class CoreController {
             return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @GetMapping("/users")
+    public ResponseEntity<?> getUsers(@RequestParam(required = false) Long lastId, @RequestParam int count) {
+        logger.info("Received request to get users. LastId: {}, Count: {}", lastId, count);
+        
+        try {
+            List<User> users = userService.getUsersPaginated(lastId, count);
+            logger.info("Successfully retrieved {} users", users.size());
+            
+            ApiResponse<List<User>> response = new ApiResponse<>();
+            response.setStatus("success");
+            response.setData(users);
+            
+            return new ResponseEntity<>(response, HttpStatus.OK);
+            
+        } catch (Exception e) {
+            logger.error("Error retrieving users: {}", e.getMessage(), e);
+            
+            ApiResponse<String> response = new ApiResponse<>();
+            response.setStatus("error");
+            response.setData("Failed to retrieve users");
+            
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    
 }
