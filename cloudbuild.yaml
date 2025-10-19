@@ -52,7 +52,7 @@ images:
 # Custom variable definitions
 substitutions:
   _IMAGE_NAME: study-buddy-api
-  _REPO_NAME: stud-buddy-api # <-- change this to your Artifact Registry repo name
+  _REPO_NAME: study-buddy-api # <-- change this to your Artifact Registry repo name
 
 options:
   logging: CLOUD_LOGGING_ONLY
