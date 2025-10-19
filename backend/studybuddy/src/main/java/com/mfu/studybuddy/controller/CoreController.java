@@ -78,7 +78,8 @@ public class CoreController {
     }
 
     @GetMapping("/users")
-    public ResponseEntity<?> getUsers(@RequestParam(required = false) Long lastId, @RequestParam int count) {
+    public ResponseEntity<?> getUsers(@RequestParam(required = false) Long lastId, 
+    @RequestParam(defaultValue = "5") int count) {
         logger.info("Received request to get users. LastId: {}, Count: {}", lastId, count);
         
         try {
