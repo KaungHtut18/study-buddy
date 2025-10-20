@@ -54,10 +54,9 @@ public class SecurityContoller {
         if(isUserValid)
         {
             User user = userService.getUserByEmail(email).get();
-            Long userId = user.getId();
-            ApiResponse<Long> response = new ApiResponse<>();
+            ApiResponse<User> response = new ApiResponse<>();
             response.setStatus("success");
-            response.setData(userId);
+            response.setData(user);
 
             return new ResponseEntity<>(response, HttpStatus.OK);
         }
