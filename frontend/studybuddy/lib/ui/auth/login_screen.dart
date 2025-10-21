@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:studybuddy/ui/auth/register_screen.dart';
-import 'package:studybuddy/ui/main_screen.dart';
+import 'package:studybuddy/controllers/auth_controller.dart';
+import 'package:studybuddy/ui/auth/register_page_view.dart';
 import 'package:studybuddy/widgets/reusable_textform_field.dart';
 import 'package:studybuddy/widgets/reusable_textform_field_suffix.dart';
 
@@ -14,13 +14,17 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final passwordController = TextEditingController();
-  final confirmPasswordController = TextEditingController();
+  final emailController = TextEditingController();
   bool _obscurePassword = true;
-  List<String> mockUniversityList = [
-    'Mae Fah Luang University',
-    'Chiang Mai University',
-    'Mahidol University',
-  ];
+  final AuthController _authController = AuthController();
+
+  void login() async {
+    await _authController.login(
+      context: context,
+      email: emailController.text,
+      password: passwordController.text,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -75,6 +79,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 5),
                   reusableTextFormField(
+                    controller: emailController,
                     hintText: 'Enter your email address',
                     prefixIcon: Icons.email,
                     errorText: 'Please enter a valid email address',
@@ -122,14 +127,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   GestureDetector(
                     onTap: () {
                       if (_formKey.currentState!.validate()) {
-                        setState(() {
-                          _formKey.currentState!.reset();
-                        });
-                        Navigator.pushAndRemoveUntil(
-                          context,
-                          MaterialPageRoute(builder: (context) => MainScreen()),
-                          (route) => false,
-                        );
+                        login();
                       }
                     },
                     child: Container(
@@ -174,7 +172,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           Navigator.pushAndRemoveUntil(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => RegisterScreen(),
+                              builder: (context) => RegisterPageView(),
                             ),
                             (route) => false,
                           );
