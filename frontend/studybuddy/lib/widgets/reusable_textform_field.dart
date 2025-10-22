@@ -4,10 +4,12 @@ Widget reusableTextFormField({
   required String hintText,
   required IconData prefixIcon,
   required String errorText,
+  required TextEditingController controller
 }) {
   return SizedBox(
     width: 370,
     child: TextFormField(
+      controller: controller,
       textAlign: TextAlign.start,
       style: TextStyle(
         fontFamily: 'Teachers-SB',

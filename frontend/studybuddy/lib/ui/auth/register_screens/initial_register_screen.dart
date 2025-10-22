@@ -1,21 +1,30 @@
-import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:studybuddy/ui/auth/login_screen.dart';
 import 'package:studybuddy/widgets/reusable_textform_field.dart';
 import 'package:studybuddy/widgets/reusable_textform_field_suffix.dart';
 
-class RegisterScreen extends StatefulWidget {
-  const RegisterScreen({super.key});
+class InitialRegisterScreen extends StatefulWidget {
+  final PageController pageController;
+  final TextEditingController nameController;
+  final TextEditingController emailController;
+  final TextEditingController passwordController;
+  final TextEditingController confirmPasswordController;
+  const InitialRegisterScreen({
+    super.key,
+    required this.pageController,
+    required this.nameController,
+    required this.emailController,
+    required this.passwordController,
+    required this.confirmPasswordController,
+  });
 
   @override
-  State<RegisterScreen> createState() => _RegisterScreenState();
+  State<InitialRegisterScreen> createState() => _InitialRegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
+class _InitialRegisterScreenState extends State<InitialRegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _isChecked = false;
-  final passwordController = TextEditingController();
-  final confirmPasswordController = TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   List<String> mockUniversityList = [
@@ -23,14 +32,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
     'Chiang Mai University',
     'Mahidol University',
   ];
-  String? _selectedValue;
 
   @override
   Widget build(BuildContext context) {
     return Form(
       key: _formKey,
       child: Scaffold(
-        backgroundColor: Color(0xFFF7F7F7),
         body: Padding(
           padding: const EdgeInsets.symmetric(vertical: 50, horizontal: 25),
           child: SingleChildScrollView(
@@ -96,6 +103,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   const SizedBox(height: 5),
                   reusableTextFormField(
+                    controller: widget.nameController,
                     hintText: 'Enter your full name',
                     prefixIcon: Icons.person,
                     errorText: 'Please enter your full name',
@@ -111,118 +119,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   const SizedBox(height: 5),
                   reusableTextFormField(
+                    controller: widget.emailController,
                     hintText: 'Enter your email address',
                     prefixIcon: Icons.email,
                     errorText: 'Please enter a valid email address',
                   ),
                   const SizedBox(height: 10),
-                  Text(
-                    'University',
-                    style: TextStyle(
-                      fontFamily: 'Teachers-SB',
-                      fontSize: 14,
-                      color: Colors.black,
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-                  SizedBox(
-                    width: 370,
-                    child: DropdownButtonFormField2<String>(
-                      alignment: Alignment.centerLeft,
-                      hint: Text(
-                        'Select your university',
-                        textAlign: TextAlign.start,
-                        style: TextStyle(
-                          fontFamily: 'Teachers-SB',
-                          fontSize: 12,
-                          color: Color(0xFF6D6D6D),
-                        ),
-                      ),
-                      validator: (value) {
-                        if (_selectedValue == null || _selectedValue!.isEmpty) {
-                          return 'Please select the university';
-                        }
-                        return null;
-                      },
-                      dropdownStyleData: DropdownStyleData(
-                        decoration: BoxDecoration(
-                          color: Colors.grey[50],
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      style: TextStyle(
-                        fontFamily: 'Teachers-SB',
-                        fontSize: 12,
-                        color: Color(0xFF6D6D6D),
-                      ),
-                      decoration: InputDecoration(
-                        filled: true,
-                        fillColor: Color(0xFFD9D9D9),
-                        prefixIcon: Icon(
-                          Icons.school,
-                          color: Color(0xFF818181),
-                          size: 20,
-                        ),
-                        errorStyle: TextStyle(
-                          fontFamily: 'Teachers-R',
-                          fontSize: 10,
-                          color: Colors.red,
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: BorderSide(
-                            color: Color(0xFFB9B9B9),
-                            width: 1.5,
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: BorderSide(
-                            color: Color(0xFFB9B9B9),
-                            width: 1.5,
-                          ),
-                        ),
-                        errorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: BorderSide(color: Colors.red),
-                        ),
-                        focusedErrorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: BorderSide(color: Colors.redAccent),
-                        ),
-                      ),
-                      items:
-                          mockUniversityList
-                              .map(
-                                (uni) => DropdownMenuItem(
-                                  alignment: Alignment.centerLeft,
-                                  value: uni,
-                                  child: Text(uni),
-                                ),
-                              )
-                              .toList(),
-                      onChanged: (value) {
-                        _selectedValue = value;
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    'Major/Field of Study',
-                    style: TextStyle(
-                      fontFamily: 'Teachers-SB',
-                      fontSize: 14,
-                      color: Colors.black,
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-                  reusableTextFormField(
-                    hintText: 'e.g. Computer Science',
-                    prefixIcon: Icons.menu_book_rounded,
-                    errorText: 'Please enter your major/field of study',
-                  ),
-                  const SizedBox(height: 10),
-
                   Text(
                     'Password',
                     style: TextStyle(
@@ -241,7 +143,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       });
                     },
                     prefixIcon: Icons.lock,
-                    controller: passwordController,
+                    controller: widget.passwordController,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please enter your password';
@@ -273,12 +175,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         _obscureConfirmPassword = !_obscureConfirmPassword;
                       });
                     },
-                    controller: confirmPasswordController,
+                    controller: widget.confirmPasswordController,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please enter your confirm password';
                       }
-                      if (value != passwordController.text) {
+                      if (value != widget.passwordController.text) {
                         return 'Passwords do not match';
                       }
                       return null;
@@ -330,10 +232,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           );
                         } else {
                           setState(() {
-                            passwordController.clear();
-                            confirmPasswordController.clear();
-                            _formKey.currentState!.reset();
+                            // widget.passwordController.clear();
+                            // widget.confirmPasswordController.clear();
+                            // _formKey.currentState!.reset();
+                            print(widget.nameController.text);
+                            print(widget.emailController.text);
+                            print(widget.confirmPasswordController.text);
                           });
+                          widget.pageController.animateToPage(
+                            1, // SkillRegisterScreen index
+                            duration: const Duration(milliseconds: 400),
+                            curve: Curves.easeInOut,
+                          );
                         }
                       }
                     },
