@@ -35,12 +35,9 @@ public class CoreController {
 
     @GetMapping("/matched-users")
     public ResponseEntity<?> getMethodName(@RequestParam Long id) {
-        ApiResponse<List<UserDto>> response = new ApiResponse<>();
+        ApiResponse<List<User>> response = new ApiResponse<>();
         List<User> matchedUsers = userService.getMatchedUsers(id);
-        List<UserDto> userDtoList = matchedUsers.stream()
-            .map(user -> user.toDto())
-            .collect(Collectors.toList());
-        response.setData(userDtoList);
+        response.setData(matchedUsers);
         response.setStatus("success");
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
