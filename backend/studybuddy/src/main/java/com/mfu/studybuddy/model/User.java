@@ -2,8 +2,9 @@ package com.mfu.studybuddy.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mfu.studybuddy.DTO.UserDto;
 
@@ -62,6 +63,22 @@ public class User{
 
     public UserDto toDto(){
         return new UserDto(this.id, this.userName,this.email);
+    }
+
+    @JsonGetter("interestedUsers")
+    public List<UserDto> getInterestedUsersJson()
+    {
+        return this.interestedUsers.stream()
+        .map(user -> user.toDto())
+        .collect(Collectors.toList());
+    }
+    
+    @JsonGetter("matchedUsers")
+    public List<UserDto> getMatchedUsersJson()
+    {
+        return this.matchedUsers.stream()
+        .map(user-> user.toDto())
+        .collect(Collectors.toList());
     }
 
 }
