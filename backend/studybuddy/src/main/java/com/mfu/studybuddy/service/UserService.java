@@ -25,6 +25,15 @@ public class UserService {
         return userRepository.save(new User(email,username,encryptedPassword)) ; 
     }
 
+    //Overloaded register function
+    public User registerUser(String email,String username, String password,List<String> skills, List<String> interests, String description)
+    {
+        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
+        String encryptedPassword = encoder.encode(password);
+        User user = new User(email,username,encryptedPassword,skills,interests,description);
+        return userRepository.save(user) ; 
+    }
+
     public boolean validateUser(String email, String password)
     {
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);

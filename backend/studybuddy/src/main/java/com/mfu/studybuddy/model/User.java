@@ -61,6 +61,16 @@ public class User{
         this.password = password;
     }
 
+    public User(String email,String userName,String password, List<String> skills, List<String> interests, String description)
+    {
+        this.email = email;
+        this.userName = userName;
+        this.password = password;
+        this.skills = skills;
+        this.interests = interests;
+        this.description = description;
+    }
+
     public UserDto toDto(){
         return new UserDto(this.id, this.userName,this.email);
     }

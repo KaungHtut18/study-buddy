@@ -27,7 +27,7 @@ public class SecurityContoller {
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody User user) {
         System.out.println(user.getPassword());
-        User savedUser = userService.registerUser(user.getEmail(), user.getUserName(), user.getPassword());
+        User savedUser = userService.registerUser(user.getEmail(), user.getUserName(), user.getPassword(),user.getSkills(),user.getInterests(),user.getDescription());
         ApiResponse<User> response = new ApiResponse<User>();
         response.setStatus("success");
         response.setData(savedUser);
