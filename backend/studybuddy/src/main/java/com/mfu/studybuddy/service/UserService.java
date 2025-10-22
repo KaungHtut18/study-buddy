@@ -43,6 +43,13 @@ public class UserService {
         
     }
 
+    public List<User> getMatchedUsers(Long id)
+    {
+        User user = userRepository.findById(id).get();
+        List<User> matchedUsers = user.getMatchedUsers();
+        return matchedUsers;
+    }
+
     public Optional<User> getUserByEmail(String email) {
         return userRepository.findByEmail(email);
     }

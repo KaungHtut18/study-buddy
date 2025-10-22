@@ -3,6 +3,7 @@ package com.mfu.studybuddy.controller;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.mfu.studybuddy.DTO.ApiResponse;
+import com.mfu.studybuddy.DTO.UserDto;
 import com.mfu.studybuddy.model.User;
 import com.mfu.studybuddy.service.UserService;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,6 +32,19 @@ public class CoreController {
 
     @Autowired
     UserService userService;
+
+    @GetMapping("/matched-users")
+    public ResponseEntity<?> getMethodName(@RequestParam Long id) {
+        ApiResponse<List<UserDto>> response = new ApiResponse<>();
+        List<User> matchedUsers = userService.getMatchedUsers(id);
+        List<UserDto> userDtoList = matchedUsers.stream()
+            .map(user -> user.toDto())
+            .collect(Collectors.toList());
+        response.setData(userDtoList);
+        response.setStatus("success");
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+    
 
     @PatchMapping("/interested-users")
     public ResponseEntity<?> addInterestedUser(@RequestHeader("User-ID") Long interestedUserId, 

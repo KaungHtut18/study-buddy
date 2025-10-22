@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.mfu.studybuddy.DTO.UserDto;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -57,6 +58,10 @@ public class User{
         this.email = email;
         this.userName = userName;
         this.password = password;
+    }
+
+    public UserDto toDto(){
+        return new UserDto(this.id, this.userName,this.email);
     }
 
 }

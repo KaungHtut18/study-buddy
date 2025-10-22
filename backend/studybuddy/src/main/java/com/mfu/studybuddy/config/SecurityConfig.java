@@ -1,4 +1,4 @@
-package com.mfu.studybuddy.configs;
+package com.mfu.studybuddy.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;

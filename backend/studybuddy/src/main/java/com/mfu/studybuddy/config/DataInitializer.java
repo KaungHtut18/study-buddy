@@ -24,6 +24,11 @@ public class DataInitializer implements CommandLineRunner {
             userService.createDummyUser("charlie@example.com", "charlie_davis", "password123");
             
             System.out.println("Dummy users created successfully!");
+
+            userService.addInterestedUser(1L, 2L);
+            userService.addInterestedUser(2L, 1L);
+
+            System.out.println("created dummy matches");
         } else {
             System.out.println("Users already exist, skipping dummy data creation.");
         }
