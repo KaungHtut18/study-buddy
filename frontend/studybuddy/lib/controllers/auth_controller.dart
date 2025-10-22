@@ -12,8 +12,8 @@ class AuthController {
     required String fullName,
     required String email,
     required String password,
-    // required List<String> interests,
-    // required List<String> skills,
+    required List<String> interests,
+    required List<String> skills,
   }) async {
     try {
       final response = await http.post(
@@ -22,6 +22,8 @@ class AuthController {
           "email": email,
           "userName": fullName,
           "password": password,
+          "interests": interests,
+          "skills": skills,
         }),
         headers: {'Content-Type': 'application/json'},
       );
@@ -71,7 +73,7 @@ class AuthController {
         },
       );
     } catch (e) {
-       print('Error: $e');
+      print('Error: $e');
     }
   }
 }

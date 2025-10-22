@@ -32,6 +32,8 @@ class _SkillRegisterScreenState extends State<SkillRegisterScreen> {
   void register() async {
     await _authController.registerUser(
       context: context,
+      skills: selectedSkills,
+      interests:  selectedInterests,
       fullName: widget.nameController.text,
       email: widget.emailController.text,
       password: widget.passwordController.text,
