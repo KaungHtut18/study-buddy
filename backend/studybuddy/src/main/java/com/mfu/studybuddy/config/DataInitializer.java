@@ -27,6 +27,8 @@ public class DataInitializer implements CommandLineRunner {
 
             userService.addInterestedUser(1L, 2L);
             userService.addInterestedUser(2L, 1L);
+            userService.addInterestedUser(3L, 1L);
+            userService.addInterestedUser(4L, 1L);
 
             System.out.println("created dummy matches");
         } else {

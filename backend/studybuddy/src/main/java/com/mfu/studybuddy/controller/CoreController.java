@@ -42,6 +42,15 @@ public class CoreController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
     
+    @GetMapping("/interested-users")
+    public ResponseEntity<?> getInterestedUsers(@RequestParam Long id) {
+        ApiResponse<List<User>> response = new ApiResponse<>();
+        List<User> interstedUsers = userService.getInterestedUsers(id);
+        response.setData(interstedUsers);
+        response.setStatus("Success");
+        return new ResponseEntity<>(response,HttpStatus.OK);
+    }
+    
 
     @PatchMapping("/interested-users")
     public ResponseEntity<?> addInterestedUser(@RequestHeader("User-ID") Long interestedUserId, 
@@ -115,4 +124,70 @@ public class CoreController {
         }
     }
     
+    @PatchMapping("/users")
+    public ResponseEntity<?> updateUser(
+        @RequestHeader("User-ID") Long userId,
+        @RequestBody Map<String, Object> updates
+    ) {
+        logger.info("Received request to update user. UserId: {}, Updates: {}", userId, updates);
+        ApiResponse<?> response = new ApiResponse<>();
+
+        try {
+            Optional<User> userOpt = userService.getUserById(userId);
+            if (userOpt.isEmpty()) {
+                logger.warn("User with ID {} does not exist", userId);
+                response.setStatus("error: User does not exist");
+                response.setData(null);
+                return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+            }
+
+            User user = userOpt.get();
+
+            if (updates.containsKey("email")) {
+                Object v = updates.get("email");
+                if (v == null || v instanceof String) user.setEmail((String) v);
+            }
+            if (updates.containsKey("userName")) {
+                Object v = updates.get("userName");
+                if (v == null || v instanceof String) user.setUserName((String) v);
+            }
+            if (updates.containsKey("description")) {
+                Object v = updates.get("description");
+                if (v == null || v instanceof String) user.setDescription((String) v);
+            }
+            if (updates.containsKey("skills")) {
+                Object v = updates.get("skills");
+                if (v instanceof List<?>) {
+                    @SuppressWarnings("unchecked")
+                    List<Object> raw = (List<Object>) v;
+                    user.setSkills(raw.stream().map(String::valueOf).collect(Collectors.toList()));
+                }
+            }
+            if (updates.containsKey("interests")) {
+                Object v = updates.get("interests");
+                if (v instanceof List<?>) {
+                    @SuppressWarnings("unchecked")
+                    List<Object> raw = (List<Object>) v;
+                    user.setInterests(raw.stream().map(String::valueOf).collect(Collectors.toList()));
+                }
+            }
+
+            // Persist changes
+            // Assumes userService has a saveUser(User user) method.
+            userService.saveUser(user);
+
+            logger.info("Successfully updated user {}", userId);
+            ApiResponse<User> ok = new ApiResponse<>();
+            ok.setStatus("success");
+            ok.setData(user);
+            return new ResponseEntity<>(ok, HttpStatus.OK);
+
+        } catch (Exception e) {
+            logger.error("Error updating user {}: {}", userId, e.getMessage(), e);
+            response.setStatus("error");
+            response.setData(null);
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
 }

@@ -34,6 +34,11 @@ public class UserService {
         return userRepository.save(user) ; 
     }
 
+    public User saveUser(User user)
+    {
+        return userRepository.save(user);
+    }
+
     public boolean validateUser(String email, String password)
     {
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
@@ -57,6 +62,14 @@ public class UserService {
         User user = userRepository.findById(id).get();
         List<User> matchedUsers = user.getMatchedUsers();
         return matchedUsers;
+    }
+
+    public List<User> getInterestedUsers(Long id)
+    {
+        User user = userRepository.findById(id).get();
+        List<User> interestedUser = user.getInterestedUsers();
+        return interestedUser;
+
     }
 
     public Optional<User> getUserByEmail(String email) {
