@@ -20,14 +20,28 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text(
-          'Study Buddy',
-          style: TextStyle(fontSize: 16, fontFamily: 'Teachers-R'),
+        backgroundColor: Colors.white,
+        actions:[ myIndex == 0
+            ? IconButton(
+              padding: const EdgeInsets.only(right: 16.0),
+                icon: const Icon(Icons.search, color: Colors.blue, size: 28),
+                onPressed: () {},
+              )
+            : SizedBox(),],
+       title: const Text(
+          'StudyBuddy',
+          style: TextStyle(
+            color: Colors.black87,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
       body: pages[myIndex],
       bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: Colors.white,
         selectedItemColor: Color(0xff30a7cc),
         showSelectedLabels: true,
         showUnselectedLabels: true,
