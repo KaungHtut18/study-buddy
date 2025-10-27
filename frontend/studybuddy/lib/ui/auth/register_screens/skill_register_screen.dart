@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:studybuddy/controllers/auth_controller.dart';
-import 'package:studybuddy/ui/main_screen.dart';
+
 
 class SkillRegisterScreen extends StatefulWidget {
   final TextEditingController nameController;

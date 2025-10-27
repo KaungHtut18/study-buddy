@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:studybuddy/global_variables.dart';
 import 'package:studybuddy/services/api_services.dart';
 import 'package:studybuddy/ui/main_screen.dart';
@@ -30,7 +31,9 @@ class AuthController {
       handleResponse(
         response: response,
         context: context,
-        onSuccess: () {
+        onSuccess: () async{
+          final prefs = await SharedPreferences.getInstance();
+          prefs.setBool('isLoggedIn', true);
           print(response);
           Navigator.pushAndRemoveUntil(
             context,
@@ -62,8 +65,10 @@ class AuthController {
       handleResponse(
         response: response,
         context: context,
-        onSuccess: () {
+        onSuccess: () async{
           print(response);
+          final prefs = await SharedPreferences.getInstance();
+          prefs.setBool('isLoggedIn', true);
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (context) => MainScreen()),

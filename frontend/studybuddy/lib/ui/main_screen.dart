@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:studybuddy/ui/home/chat_screen.dart';
 import 'package:studybuddy/ui/home/home_screen.dart';
 import 'package:studybuddy/ui/home/user_setting.dart';
+import 'package:studybuddy/ui/match_service/match_notifier_service.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -12,11 +13,25 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int myIndex = 1;
+  final _matchService = MatchNotifierService();
   List<Widget> pages = [
     const ChatScreen(),
     const HomeScreen(),
     const UserSetting(),
   ];
+
+  @override
+void initState() {
+  super.initState();
+  _initializeMatchNotifier();
+}
+
+Future<void> _initializeMatchNotifier() async {
+  _matchService.start();
+}
+
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
