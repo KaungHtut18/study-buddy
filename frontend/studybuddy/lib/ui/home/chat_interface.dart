@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
+import 'package:provider/provider.dart';
+import 'package:studybuddy/services/service_provider.dart';
 
 class ChatInterface extends StatefulWidget {
   const ChatInterface({super.key});
@@ -18,10 +20,25 @@ class _ChatInterfaceState extends State<ChatInterface> {
     apiKey: 'AIzaSyCdvyteh9tZ9foi0ZlbnoWVR39Ch8w3bK0',
   );
 
-  Future<String> generateResponse(String question) async {
+  Future<String> generateResponse(
+    String question,
+    int wordCount,
+    BuildContext bContext,
+  ) async {
+    final serviceProvider = Provider.of<ServiceProvider>(
+      bContext,
+      listen: false,
+    );
+    print(serviceProvider.inDetail);
+    print(serviceProvider.inDetail);
+    print('Word count: $wordCount');
     String prompt =
-        '''Act as an AI tutor to help students with their studies.For this chat, 
-    please provide short, clear and concise explanations, which are not more than 50 words, on various subjects.
+        serviceProvider.inDetail
+            ? '''Act as an AI tutor to help students with their studies.For this chat, 
+    please provide detailed explanations, which are not less than than $wordCount words, on various subjects. Do not include any greetings and extra words. Just focus on answering the question.
+    This is the student's question: $question'''
+            : '''Act as an AI tutor to help students with their studies.For this chat, 
+    please provide short, clear and concise explanations, which are not more than $wordCount words, on various subjects.
     This is the student's question: $question''';
     try {
       final response = await model.generateContent([Content.text(prompt)]);
@@ -32,25 +49,18 @@ class _ChatInterfaceState extends State<ChatInterface> {
   }
 
   final List<ChatMessage> _messages = [
-    ChatMessage(text: 'Hey! How are you?', isMe: false, time: '10:30 AM'),
     ChatMessage(
-      text: 'I\'m doing great! Thanks for asking.',
-      isMe: true,
-      time: '10:31 AM',
-    ),
-    ChatMessage(
-      text: 'Would you like to grab coffee later?',
+      text: 'Hey! How can I help you today?',
       isMe: false,
-      time: '10:32 AM',
-    ),
-    ChatMessage(
-      text: 'Sure! What time works for you?',
-      isMe: true,
-      time: '10:33 AM',
+      time: '10:30 AM',
     ),
   ];
 
   void _sendMessage() async {
+    final serviceProvider = Provider.of<ServiceProvider>(
+      context,
+      listen: false,
+    );
     if (_messageController.text.trim().isNotEmpty) {
       setState(() {
         _messages.add(
@@ -66,8 +76,13 @@ class _ChatInterfaceState extends State<ChatInterface> {
         _isTyping = true;
       });
       String question = _messageController.text;
+      int wordCount = serviceProvider.inDetail ? 200 : 50;
       _messageController.clear();
-      String responseText = await generateResponse(question);
+      String responseText = await generateResponse(
+        question,
+        wordCount,
+        context,
+      );
       setState(() {
         _isTyping = false;
         _messages.add(
@@ -83,15 +98,12 @@ class _ChatInterfaceState extends State<ChatInterface> {
   }
 
   void scrollToBottom() {
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    if (_scrollController.hasClients) {
-      _scrollController.jumpTo(
-        _scrollController.position.maxScrollExtent,
-       
-      );
-    }
-  });
-}
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+      }
+    });
+  }
 
   String _formatTime(DateTime time) {
     int hour = time.hour;
@@ -103,6 +115,10 @@ class _ChatInterfaceState extends State<ChatInterface> {
 
   @override
   Widget build(BuildContext context) {
+    final serviceProvider = Provider.of<ServiceProvider>(
+      context,
+      listen: false,
+    );
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
@@ -111,9 +127,18 @@ class _ChatInterfaceState extends State<ChatInterface> {
         automaticallyImplyLeading: true,
         title: Row(
           children: [
-            CircleAvatar(
-              backgroundColor: Colors.blue[100],
-              child: const Icon(Icons.person, color: Colors.blue),
+            Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                color: Colors.blue[100],
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.smart_toy_outlined,
+                color: Colors.blue,
+                size: 20,
+              ),
             ),
             const SizedBox(width: 12),
             const Column(
@@ -175,13 +200,23 @@ class _ChatInterfaceState extends State<ChatInterface> {
               padding: const EdgeInsets.all(8.0),
               child: Row(
                 children: [
-                  IconButton(
-                    icon: Icon(
-                      Icons.add_circle_outline,
-                      color: Colors.grey[600],
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        serviceProvider.setInDetail(!serviceProvider.inDetail);
+                      });
+                    },
+                    style: TextButton.styleFrom(
+                      foregroundColor:
+                          serviceProvider.inDetail ? Colors.blue : Colors.white,
+                      backgroundColor:
+                          serviceProvider.inDetail
+                              ? Colors.blue[50]
+                              : Colors.grey[300],
                     ),
-                    onPressed: () {},
+                    child: const Text('Detail'),
                   ),
+                  SizedBox(width: 8),
                   Expanded(
                     child: TextField(
                       controller: _messageController,
@@ -347,10 +382,18 @@ class MessageBubble extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!message.isMe)
-            CircleAvatar(
-              backgroundColor: Colors.grey[300],
-              radius: 16,
-              child: Icon(Icons.person, size: 18, color: Colors.grey[600]),
+            Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                color: Colors.blue[100],
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.smart_toy_outlined,
+                color: Colors.blue,
+                size: 20,
+              ),
             ),
           if (!message.isMe) const SizedBox(width: 8),
           Flexible(

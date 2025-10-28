@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:studybuddy/services/service_provider.dart';
 import 'package:studybuddy/ui/home/chat_screen.dart';
 import 'package:studybuddy/ui/home/home_screen.dart';
 import 'package:studybuddy/ui/home/user_setting.dart';
-import 'package:studybuddy/ui/match_service/match_notifier_service.dart';
+import 'package:studybuddy/services/match_notifier_service.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -13,23 +15,35 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int myIndex = 1;
+
   final _matchService = MatchNotifierService();
-  List<Widget> pages = [
-    const ChatScreen(),
-    const HomeScreen(),
-    const UserSetting(),
-  ];
+  List<Widget> pages = [const ChatScreen(), HomeScreen(), const UserSetting()];
 
   @override
-void initState() {
-  super.initState();
-  _initializeMatchNotifier();
-}
+  void initState() {
+    super.initState();
+    _initializeMatchNotifier();
+  }
 
-Future<void> _initializeMatchNotifier() async {
-  _matchService.start();
-}
+  Future<void> _initializeMatchNotifier() async {
+    final serviceProvider = Provider.of<ServiceProvider>(
+      context,
+      listen: false,
+    );
 
+    // Add a small delay to ensure context is ready
+    await Future.delayed(const Duration(milliseconds: 100));
+    
+    _matchService.start((count) {
+      serviceProvider.setMatchedCount(count);
+    }, serviceProvider.userId);
+  }
+
+  @override
+  void dispose() {
+    _matchService.stop();
+    super.dispose();
+  }
 
 
   @override
@@ -38,14 +52,16 @@ Future<void> _initializeMatchNotifier() async {
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
-        actions:[ myIndex == 0
-            ? IconButton(
-              padding: const EdgeInsets.only(right: 16.0),
+        actions: [
+          myIndex == 0
+              ? IconButton(
+                padding: const EdgeInsets.only(right: 16.0),
                 icon: const Icon(Icons.search, color: Colors.blue, size: 28),
                 onPressed: () {},
               )
-            : SizedBox(),],
-       title: const Text(
+              : SizedBox(),
+        ],
+        title: const Text(
           'StudyBuddy',
           style: TextStyle(
             color: Colors.black87,
@@ -60,12 +76,8 @@ Future<void> _initializeMatchNotifier() async {
         selectedItemColor: Color(0xff30a7cc),
         showSelectedLabels: true,
         showUnselectedLabels: true,
-        selectedLabelStyle: TextStyle(
-          fontFamily: 'Teachers-R',
-        ),
-        unselectedLabelStyle: TextStyle(
-          fontFamily: 'Teachers-R',
-        ),
+        selectedLabelStyle: TextStyle(fontFamily: 'Teachers-R'),
+        unselectedLabelStyle: TextStyle(fontFamily: 'Teachers-R'),
         onTap: (index) {
           setState(() {
             myIndex = index;

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:studybuddy/services/service_provider.dart';
 import 'package:studybuddy/ui/auth/login_screen.dart';
 import 'package:studybuddy/ui/main_screen.dart';
-import 'package:studybuddy/ui/match_service/match_notifier_service.dart';
+import 'package:studybuddy/services/match_notifier_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -11,7 +13,12 @@ void main() async {
   await matchService.init();
   final prefs = await SharedPreferences.getInstance();
   bool? isLoggedIn = prefs.getBool('isLoggedIn');
-  runApp(StudyBuddy(isLoggedIn: isLoggedIn));
+  runApp(
+    MultiProvider(
+      providers: [ChangeNotifierProvider(create: (_) => ServiceProvider())],
+      child: StudyBuddy(isLoggedIn: isLoggedIn),
+    ),
+  );
 }
 
 class StudyBuddy extends StatelessWidget {

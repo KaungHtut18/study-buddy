@@ -2,9 +2,11 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:studybuddy/global_variables.dart';
 import 'package:studybuddy/services/api_services.dart';
+import 'package:studybuddy/services/service_provider.dart';
 import 'package:studybuddy/ui/main_screen.dart';
 
 class AuthController {
@@ -31,10 +33,25 @@ class AuthController {
       handleResponse(
         response: response,
         context: context,
-        onSuccess: () async{
+        onSuccess: () async {
           final prefs = await SharedPreferences.getInstance();
           prefs.setBool('isLoggedIn', true);
-          print(response);
+          final serviceProvider = Provider.of<ServiceProvider>(
+            context,
+            listen: false,
+          );
+          serviceProvider.setUserId(jsonDecode(response.body)['data']['id']);
+          serviceProvider.setUserName(
+            jsonDecode(response.body)['data']['userName'],
+          );
+          serviceProvider.setInteresting(
+            List<String>.from(jsonDecode(response.body)['data']['interests']),
+          );
+          serviceProvider.setSkills(
+            List<String>.from(jsonDecode(response.body)['data']['skills']),
+          );
+          print('----------------------------------------------');
+          print(serviceProvider.skills);
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (context) => MainScreen()),
@@ -65,8 +82,24 @@ class AuthController {
       handleResponse(
         response: response,
         context: context,
-        onSuccess: () async{
+        onSuccess: () async {
           print(response);
+          final serviceProvider = Provider.of<ServiceProvider>(
+            context,
+            listen: false,
+          );
+          serviceProvider.setUserId(jsonDecode(response.body)['data']['id']);
+          serviceProvider.setUserName(
+            jsonDecode(response.body)['data']['userName'],
+          );
+          serviceProvider.setInteresting(
+            List<String>.from(jsonDecode(response.body)['data']['interests']),
+          );
+          serviceProvider.setSkills(
+            List<String>.from(jsonDecode(response.body)['data']['skills']),
+          );
+          print('----------------------------------------------');
+          print(serviceProvider.skills);
           final prefs = await SharedPreferences.getInstance();
           prefs.setBool('isLoggedIn', true);
           Navigator.pushAndRemoveUntil(

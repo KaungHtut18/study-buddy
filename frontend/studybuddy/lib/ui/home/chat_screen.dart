@@ -21,8 +21,8 @@ class ChatScreen extends StatelessWidget {
                 );
               },
               child: ChatListItem(
-                name: 'Your AI Tutor',
-                message: 'Sure, I can help with that.',
+                name: 'AI Tutor',
+                message: 'Hey! How can I help you today?',
                 time: '9:59 PM',
                 avatar: Container(
                   decoration: BoxDecoration(
@@ -51,8 +51,8 @@ class ChatScreen extends StatelessWidget {
               ),
             ),
             ChatListItem(
-              name: 'Alex Johnson',
-              message: 'Hey, are you free to study...',
+              name: 'John',
+              message: 'Ok lets work on the project',
               time: '10:30 PM',
               avatar: Container(
                 decoration: BoxDecoration(
@@ -63,8 +63,8 @@ class ChatScreen extends StatelessWidget {
               ),
             ),
             ChatListItem(
-              name: 'Alex Johnson',
-              message: 'Hey, are you free to study...',
+              name: 'Maya',
+              message: 'Can you explain this topic for me?',
               time: '10:30 PM',
               avatar: Container(
                 decoration: BoxDecoration(
@@ -74,18 +74,7 @@ class ChatScreen extends StatelessWidget {
                 child: Icon(Icons.person, color: Colors.grey[600], size: 32),
               ),
             ),
-            ChatListItem(
-              name: 'Alex Johnson',
-              message: 'Hey, are you free to study...',
-              time: '10:30 PM',
-              avatar: Container(
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(Icons.person, color: Colors.grey[600], size: 32),
-              ),
-            ),
+            
           ],
         ),
       ),

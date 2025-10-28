@@ -4,7 +4,9 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_card_swiper/flutter_card_swiper.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 import 'package:studybuddy/modela/user.dart';
+import 'package:studybuddy/services/service_provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -22,11 +24,19 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Color swipeIconColor = const Color(0xff41515b);
 
+  int interestedUsersCount = 0;
+
   List<String> imageUrls = [
-    'assets/images/bryan.webp',
-    'assets/images/kylie.webp',
-    'assets/images/nythan.webp',
-    'assets/images/Suzy.jpeg',
+    'assets/images/animal1.png',
+    'assets/images/animal2.png',
+    'assets/images/animal3.png',
+    'assets/images/animal4.png',
+    'assets/images/animal5.png',
+    'assets/images/animal6.png',
+    'assets/images/animal7.png',
+    'assets/images/animal8.png',
+    'assets/images/animal9.png',
+    'assets/images/animal10.png',
   ];
 
   late List<User> people = [];
@@ -37,13 +47,24 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     isLoading = true;
     loadPeople();
+    loadInterestedUsers();
   }
 
+  //api/interested-users?id=1
+  //api/interested-users(patch) targetUserId
+
   Future<void> loadPeople() async {
+    final serviceProvider = Provider.of<ServiceProvider>(
+      context,
+      listen: false,
+    );
     try {
       final response = await http.get(
-        Uri.parse('http://localhost:8080/api/users?count=5'),
-        headers: {'user-id': '1'},
+        Uri.parse('http://localhost:8080/api/users?count=20'),
+        headers: {
+          'user-id': '${serviceProvider.userId}',
+          'Content-Type': 'application/json',
+        },
       );
 
       if (response.statusCode == 200) {
@@ -56,7 +77,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 .toList();
         for (var person in loadedPeople) {
           setState(() {
-            person.imageUrl = imageUrls[math.Random().nextInt(imageUrls.length)];
+            person.imageUrl =
+                imageUrls[math.Random().nextInt(imageUrls.length)];
           });
         }
 
@@ -75,8 +97,71 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> loadInterestedUsers() async {
+    final serviceProvider = Provider.of<ServiceProvider>(
+      context,
+      listen: false,
+    );
+    try {
+      final response = await http.get(
+        Uri.parse('http://localhost:8080/api/interested-users?id=${serviceProvider.userId}'),
+        headers: {
+          'Content-Type': 'application/json',
+          'user-id': '${serviceProvider.userId}',
+        },
+      );
+      if (response.statusCode == 200) {
+        print('Interested users fetched: ${response.body}');
+        final dynamic body = jsonDecode(response.body);
+        final List<dynamic> data = body['data'];
+        setState(() {
+          interestedUsersCount = data.length;
+        });
+      } else {
+        throw Exception(
+          'Failed to load interested users: ${response.statusCode}',
+        );
+      }
+    } catch (e) {
+      throw Exception('Error loading interested users: $e');
+    }
+  }
+
+  Future<void> _handleSwipe(String direction, User user) async {
+    final serviceProvider = Provider.of<ServiceProvider>(
+      context,
+      listen: false,
+    );
+    String targetUserId = user.id.toString();
+    String apiUrl = 'http://localhost:8080/api/interested-users';
+
+    if (direction == 'right' || direction == 'up') {
+      try {
+        final response = await http.patch(
+          Uri.parse(apiUrl),
+          headers: {
+            'Content-Type': 'application/json',
+            'user-id': '${serviceProvider.userId}',
+          },
+          body: jsonEncode({'targetUserId': targetUserId}),
+        );
+
+        if (response.statusCode == 200) {
+          print('Interest recorded for user $targetUserId');
+        } else {
+          print(
+            'Failed to record interest: ${response.statusCode} - ${response.body}',
+          );
+        }
+      } catch (e) {
+        print('Error recording interest: $e');
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final matchedCount = context.watch<ServiceProvider>().matchedCount;
     return Scaffold(
       backgroundColor: Colors.white,
       body:
@@ -101,10 +186,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: const [
-                        MainInfoCard(count: '24', title: 'Matches'),
-                        MainInfoCard(count: '12', title: 'Likes'),
-                        MainInfoCard(count: '30', title: 'Favorites'),
+                      children: [
+                        MainInfoCard(count: '$matchedCount', title: 'Matches'),
+                        MainInfoCard(
+                          count: '$interestedUsersCount',
+                          title: 'Interested Users',
+                        ),
                       ],
                     ),
                     const SizedBox(height: 20),
@@ -118,6 +205,22 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         controller: _controller,
                         cardsCount: people.length,
+                        onSwipe: (
+                          previousIndex,
+                          currentIndex,
+                          direction,
+                        ) async {
+                          if (direction == CardSwiperDirection.left) {
+                            await _handleSwipe('left', people[previousIndex]);
+                          } else if (direction == CardSwiperDirection.right) {
+                            await _handleSwipe('right', people[previousIndex]);
+                            await loadInterestedUsers();
+                          } else if (direction == CardSwiperDirection.top) {
+                            await _handleSwipe('up', people[previousIndex]);
+                            await loadInterestedUsers();
+                          }
+                          return true;
+                        },
                         onSwipeDirectionChange: (
                           horizontalDirection,
                           verticalDirection,
@@ -135,6 +238,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           } else if (horizontalDirection ==
                               CardSwiperDirection.right) {
                             newLikeScale = 1.0 + (10 / 100 * bumpFactor);
+                            print('right');
                           } else if (verticalDirection ==
                                   CardSwiperDirection.top ||
                               horizontalDirection == CardSwiperDirection.top) {
@@ -251,7 +355,7 @@ class MainInfoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 100,
+      width: 120,
       height: 60,
       decoration: BoxDecoration(
         color: const Color(0xff30a7cc),
@@ -325,57 +429,105 @@ class SwipeCard extends StatelessWidget {
                 name,
                 style: const TextStyle(
                   fontFamily: 'Teachers-B',
-                  fontSize: 20,
+                  fontSize: 30,
                   fontWeight: FontWeight.bold,
                   color: Color(0xff3a4a52),
                 ),
               ),
-              const SizedBox(height: 5),
-              Text(
-                bio,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey[700],
-                  fontFamily: 'Teachers-R',
+
+              // Text(
+              //   bio,
+              //   style: TextStyle(
+              //     fontSize: 14,
+              //     color: Colors.grey[700],
+              //     fontFamily: 'Teachers-R',
+              //   ),
+              // ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child:
+                      interests.isEmpty
+                          ? SizedBox()
+                          : Text(
+                            'Interests',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.blueGrey[700],
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Teachers-SB',
+                            ),
+                          ),
                 ),
               ),
-              const SizedBox(height: 10),
-              Wrap(
-                spacing: 5,
-                children:
-                    interests
-                        .map(
-                          (interest) => Chip(
-                            label: Text(
-                              interest,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontFamily: 'Teachers-SB',
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: Wrap(
+                    alignment: WrapAlignment.start,
+                    spacing: 5,
+                    children:
+                        interests
+                            .map(
+                              (interest) => Chip(
+                                label: Text(
+                                  interest,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontFamily: 'Teachers-SB',
+                                  ),
+                                ),
+                                backgroundColor: const Color(0xff30a7cc),
                               ),
-                            ),
-                            backgroundColor: const Color(0xff30a7cc),
-                          ),
-                        )
-                        .toList(),
+                            )
+                            .toList(),
+                  ),
+                ),
               ),
-              const SizedBox(height: 10),
-              Wrap(
-                spacing: 5,
-                children:
-                    skills
-                        .map(
-                          (skill) => Chip(
-                            label: Text(
-                              skill,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontFamily: 'Teachers-SB',
-                              ),
+              SizedBox(height: 10),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child:
+                      interests.isEmpty
+                          ? SizedBox()
+                          : Text(
+                            'Skills',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.blueGrey[700],
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Teachers-SB',
                             ),
-                            backgroundColor: const Color(0xff30a7cc),
                           ),
-                        )
-                        .toList(),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: Wrap(
+                    spacing: 5,
+                    children:
+                        skills
+                            .map(
+                              (skill) => Chip(
+                                label: Text(
+                                  skill,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontFamily: 'Teachers-SB',
+                                  ),
+                                ),
+                                backgroundColor: const Color(0xff30a7cc),
+                              ),
+                            )
+                            .toList(),
+                  ),
+                ),
               ),
               const SizedBox(height: 10),
             ],
