@@ -1,0 +1,3 @@
+#!/bin/bash
+echo "Starting Study Buddy container..."
+docker run --rm -p 8080:8080 --name study-buddy-app study-buddy:latest

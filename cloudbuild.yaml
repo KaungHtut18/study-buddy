@@ -1,0 +1,58 @@
+# Cloud Build configuration for deploying to Cloud Run using Artifact Registry (us-central1 - Iowa)
+
+steps:
+  # Step 1: Build the Docker image
+  - name: gcr.io/cloud-builders/docker
+    args:
+      [
+        "build",
+        "-t",
+        "us-central1-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/study-buddy-api:$SHORT_SHA",
+        "-t",
+        "us-central1-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/study-buddy-api:latest",
+        "backend/studybuddy",
+      ]
+
+  # Step 2: Push both image tags to Artifact Registry
+  - name: gcr.io/cloud-builders/docker
+    args:
+      [
+        "push",
+        "us-central1-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/study-buddy-api:$SHORT_SHA",
+      ]
+  - name: gcr.io/cloud-builders/docker
+    args:
+      [
+        "push",
+        "us-central1-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/study-buddy-api:latest",
+      ]
+
+  # Step 3: Deploy the image to Cloud Run (us-central1)
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      [
+        "run",
+        "deploy",
+        "study-buddy-api",
+        "--image",
+        "us-central1-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/study-buddy-api:$SHORT_SHA",
+        "--region",
+        "us-central1",
+        "--platform",
+        "managed",
+        "--allow-unauthenticated",
+      ]
+
+# Register the images built during this process
+images:
+  - us-central1-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/study-buddy-api:$SHORT_SHA
+  - us-central1-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/study-buddy-api:latest
+
+# Custom variable definitions
+substitutions:
+  _IMAGE_NAME: study-buddy-api
+  _REPO_NAME: study-buddy-api # <-- change this to your Artifact Registry repo name
+
+options:
+  logging: CLOUD_LOGGING_ONLY
