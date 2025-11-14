@@ -99,12 +99,12 @@ public class CoreController {
     }
 
     @GetMapping("/users")
-    public ResponseEntity<?> getUsers(@RequestParam(required = false) Long lastId, 
+    public ResponseEntity<?> getUsers(@RequestHeader("User-Id") Long id,@RequestParam(required = false) Long lastId, 
     @RequestParam(defaultValue = "5") int count) {
         logger.info("Received request to get users. LastId: {}, Count: {}", lastId, count);
         
         try {
-            List<User> users = userService.getUsersPaginated(lastId, count);
+            List<User> users = userService.getUsersPaginated(lastId, count,id);
             logger.info("Successfully retrieved {} users", users.size());
             
             ApiResponse<List<User>> response = new ApiResponse<>();

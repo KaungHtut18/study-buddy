@@ -27,4 +27,7 @@ public interface UserRepository extends JpaRepository<User,Long>{
     List<User> findAllByOrderByIdAsc(Pageable pageable);
     
     List<User> findByIdGreaterThanOrderByIdAsc(Long lastId, Pageable pageable);
+
+    // New: exclude a specific user when paging forward
+    List<User> findByIdGreaterThanAndIdNotOrderByIdAsc(Long lastId, Long id, Pageable pageable);
 }

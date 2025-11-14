@@ -105,7 +105,7 @@ public class UserService {
         userRepository.save(interestedUser);       
     }
 
-    public List<User> getUsersPaginated(Long lastId, int count) {
+    public List<User> getUsersPaginated(Long lastId, int count,Long currentUserId) {
         Pageable pageable = Pageable.ofSize(count);
         
         // Debug: Log total user count
@@ -119,7 +119,10 @@ public class UserService {
             result = userRepository.findAllByOrderByIdAsc(pageable);
         } else {
             // Subsequent requests - get 'count' users with ID greater than lastId
-            result = userRepository.findByIdGreaterThanOrderByIdAsc(lastId, pageable);
+            if(currentUserId == 0)
+                result = userRepository.findByIdGreaterThanOrderByIdAsc(lastId, pageable);
+            else
+                result = userRepository.findByIdGreaterThanAndIdNotOrderByIdAsc(lastId, currentUserId, pageable);
         }
         
         System.out.println("Returned " + result.size() + " users");
