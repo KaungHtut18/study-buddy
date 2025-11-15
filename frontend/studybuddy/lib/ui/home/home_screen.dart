@@ -10,10 +10,14 @@ import 'package:studybuddy/services/service_provider.dart';
 import 'package:studybuddy/ui/home/matched_users.dart';
 import 'package:studybuddy/global_variables.dart';
 
-// Define a constant for the maximum desired width of the entire swipe area on a web screen
-// Increased to allow space for controls on the sides of the card.
+// --- Responsive Constants ---
+// Maximum width for the entire swipe area on desktop
 const double _kMaxSwiperAreaWidth = 900.0;
-const double _kCardWidth = 450.0; // Fixed width for the swipe card
+// Fixed width for the swipe card on desktop
+const double _kCardWidth = 450.0;
+// Screen width breakpoint to switch to mobile layout
+const double _kMobileBreakpoint = 600.0;
+// ----------------------------
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -24,8 +28,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final _controller = CardSwiperController();
-
-  // ... (unchanged state variables and API methods - omitted for brevity)
   double _dislikeButtonScale = 1.0;
   double _likeButtonScale = 1.0;
   double _superLikeButtonScale = 1.0;
@@ -33,6 +35,8 @@ class _HomeScreenState extends State<HomeScreen> {
   Color swipeIconColor = const Color(0xff41515b);
 
   int interestedUsersCount = 0;
+
+  // ... (imageUrls, people list, isLoading, initState, API methods - unchanged)
 
   List<String> imageUrls = [
     'assets/images/animal1.png',
@@ -116,7 +120,6 @@ class _HomeScreenState extends State<HomeScreen> {
         },
       );
       if (response.statusCode == 200) {
-        print('Interested users fetched: ${response.body}');
         final dynamic body = jsonDecode(response.body);
         final List<dynamic> data = body['data'];
         setState(() {
@@ -164,298 +167,447 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  // --- BUILD METHOD START ---
   @override
   Widget build(BuildContext context) {
     List<String> matchedUsers =
         Provider.of<ServiceProvider>(context).matchedUsers;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < _kMobileBreakpoint;
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body:
-          isLoading
-              ? const Center(
-                child: CircularProgressIndicator(color: Color(0xff30a7cc)),
-              )
-              : people.isEmpty
-              ? const Center(
-                child: Text(
-                  'No more users to swipe right now.\nPlease check back later!',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: Color(0xff3a4a52),
-                    fontFamily: 'Teachers-R',
-                  ),
-                ),
-              )
-              : SingleChildScrollView(
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(
-                      maxWidth: _kMaxSwiperAreaWidth, // Wider max width
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // 1. Info Cards Header
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 20.0,
-                            horizontal: 25.0,
+    // Define mobile-friendly button sizes
+    final mobileButtonSize = isMobile ? 50.0 : 60.0;
+    final mobileLikeSize = isMobile ? 70.0 : 80.0;
+    final mobileIconSize = isMobile ? 30.0 : 35.0;
+    final mobileLikeIconSize = isMobile ? 40.0 : 50.0;
+
+    // Handle Loading/Empty states
+    if (isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: Color(0xff30a7cc)),
+      );
+    }
+    if (people.isEmpty) {
+      return const Center(
+        child: Text(
+          'No more users to swipe right now.\nPlease check back later!',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 18,
+            color: Color(0xff3a4a52),
+            fontFamily: 'Teachers-R',
+          ),
+        ),
+      );
+    }
+
+    // --- BUTTON WIDGET FACTORY ---
+    Widget buildIconButton({
+      required CardSwiperDirection direction,
+      required IconData icon,
+      required Color iconColor,
+      required Color backgroundColor,
+      required double iconSize,
+      required double buttonSize,
+      required double scale,
+      required VoidCallback onEnd,
+    }) {
+      return AnimatedScale(
+        onEnd: onEnd,
+        scale: scale,
+        duration: const Duration(milliseconds: 100),
+        child: IconButton(
+          icon: Icon(icon, color: iconColor, size: iconSize),
+          style: IconButton.styleFrom(
+            backgroundColor: backgroundColor,
+            fixedSize: Size(buttonSize, buttonSize),
+          ),
+          onPressed: () {
+            _controller.swipe(direction);
+          },
+        ),
+      );
+    }
+
+    // --- MAIN LAYOUT WIDGET ---
+    Widget mainContent;
+
+    if (isMobile) {
+      // -----------------------------------------------------
+      // 📱 MOBILE LAYOUT: Info Cards and Buttons BELOW the Swiper
+      // -----------------------------------------------------
+      mainContent = SingleChildScrollView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Info Cards Header (Padded)
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                vertical: 20.0,
+                horizontal: 25.0,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => MatchedUserList(),
                           ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              Expanded(
-                                child: GestureDetector(
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => MatchedUserList(),
-                                      ),
-                                    );
-                                  },
-                                  child: MainInfoCard(
-                                    count: '${matchedUsers.length}',
-                                    title: 'Matched',
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 20),
-                              Expanded(
-                                child: MainInfoCard(
-                                  count: '$interestedUsersCount',
-                                  title: 'Interested Users',
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 30),
-
-                        // 2. Main Swiper and Side Buttons in a single Row
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            // --- Left Button Group (Dislike) ---
-                            AnimatedScale(
-                              onEnd: () {
-                                setState(() {
-                                  swipeIconColor = const Color(0xff41515b);
-                                });
-                              },
-                              scale: _dislikeButtonScale,
-                              duration: const Duration(milliseconds: 100),
-                              child: IconButton(
-                                icon: Icon(
-                                  Icons.clear,
-                                  color: swipeIconColor,
-                                  size: 35,
-                                ),
-                                style: IconButton.styleFrom(
-                                  backgroundColor: const Color(0xffa6d5e6),
-                                  fixedSize: const Size(60, 60),
-                                ),
-                                onPressed: () {
-                                  _controller.swipe(CardSwiperDirection.left);
-                                },
-                              ),
-                            ),
-                            const SizedBox(
-                              width: 40,
-                            ), // Spacing between button and card
-                            // --- Center Swiper Card ---
-                            SizedBox(
-                              width: _kCardWidth, // Fixed width for the card
-                              height:
-                                  MediaQuery.sizeOf(context).height * 0.85 > 800
-                                      ? 800
-                                      : MediaQuery.sizeOf(context).height *
-                                          0.85, // Max height
-                              child: CardSwiper(
-                                // Swiper setup (omitted for brevity)
-                                allowedSwipeDirection:
-                                    const AllowedSwipeDirection.only(
-                                      left: true,
-                                      right: true,
-                                      up: true,
-                                    ),
-                                controller: _controller,
-                                cardsCount: people.length,
-                                onSwipe: (
-                                  previousIndex,
-                                  currentIndex,
-                                  direction,
-                                ) async {
-                                  if (direction == CardSwiperDirection.left) {
-                                    await _handleSwipe(
-                                      'left',
-                                      people[previousIndex],
-                                    );
-                                  } else if (direction ==
-                                      CardSwiperDirection.right) {
-                                    await _handleSwipe(
-                                      'right',
-                                      people[previousIndex],
-                                    );
-                                    await loadInterestedUsers();
-                                  } else if (direction ==
-                                      CardSwiperDirection.top) {
-                                    await _handleSwipe(
-                                      'up',
-                                      people[previousIndex],
-                                    );
-                                    await loadInterestedUsers();
-                                  }
-                                  return true;
-                                },
-                                onSwipeDirectionChange: (
-                                  horizontalDirection,
-                                  verticalDirection,
-                                ) {
-                                  const bumpFactor = 2.5;
-                                  double newDislikeScale = 1.0;
-                                  double newLikeScale = 1.0;
-                                  double newSuperLikeScale = 1.0;
-
-                                  if (horizontalDirection ==
-                                      CardSwiperDirection.left) {
-                                    newDislikeScale =
-                                        1.0 + (10 / 100 * bumpFactor);
-                                    setState(() {
-                                      swipeIconColor = Colors.red;
-                                    });
-                                  } else if (horizontalDirection ==
-                                      CardSwiperDirection.right) {
-                                    newLikeScale =
-                                        1.0 + (10 / 100 * bumpFactor);
-                                  } else if (verticalDirection ==
-                                          CardSwiperDirection.top ||
-                                      horizontalDirection ==
-                                          CardSwiperDirection.top) {
-                                    newSuperLikeScale =
-                                        1.0 + (10 / 100 * bumpFactor);
-                                  }
-
-                                  setState(() {
-                                    _dislikeButtonScale = newDislikeScale;
-                                    _likeButtonScale = newLikeScale;
-                                    _superLikeButtonScale = newSuperLikeScale;
-                                  });
-                                },
-                                cardBuilder: (
-                                  context,
-                                  index,
-                                  percentThresholdX,
-                                  percentThresholdY,
-                                ) {
-                                  final person = people[index];
-                                  num dragAmount = percentThresholdX;
-                                  bool showLike =
-                                      dragAmount > 0.1; // drag right
-                                  bool showNope =
-                                      dragAmount < -0.1; // drag left
-
-                                  return SwipeCard(
-                                    name: person.name,
-                                    bio: person.description ?? '',
-                                    imageUrl:
-                                        person.imageUrl ??
-                                        'assets/images/Suzy.jpeg',
-                                    interests: person.interests ?? [],
-                                    skills: person.skills ?? [],
-                                    like: showLike,
-                                    nope: showNope,
-                                  );
-                                },
-                              ),
-                            ),
-
-                            const SizedBox(
-                              width: 40,
-                            ), // Spacing between card and button
-                            // --- Right Button Group (Like and Super Like) ---
-                            Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                // Super Like (Top Button)
-                                AnimatedScale(
-                                  scale: _superLikeButtonScale,
-                                  duration: const Duration(milliseconds: 100),
-                                  child: IconButton(
-                                    icon: const Icon(
-                                      Icons.star,
-                                      color: Color(0xff41515b),
-                                      size: 35,
-                                    ),
-                                    style: IconButton.styleFrom(
-                                      backgroundColor: const Color(0xffa6d5e6),
-                                      fixedSize: const Size(60, 60),
-                                    ),
-                                    onPressed: () {
-                                      _controller.swipe(
-                                        CardSwiperDirection.top,
-                                      );
-                                    },
-                                  ),
-                                ),
-                                const SizedBox(height: 30),
-
-                                // Like (Main Button)
-                                AnimatedScale(
-                                  scale: _likeButtonScale,
-                                  duration: const Duration(milliseconds: 100),
-                                  child: IconButton(
-                                    icon: const Icon(
-                                      Icons.favorite,
-                                      color: Colors.white,
-                                      size: 50,
-                                    ),
-                                    style: IconButton.styleFrom(
-                                      backgroundColor: const Color(0xff30a7cc),
-                                      fixedSize: const Size(80, 80),
-                                    ),
-                                    onPressed: () {
-                                      _controller.swipe(
-                                        CardSwiperDirection.right,
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 30),
-                        // The bottom button row is removed for simplicity,
-                        // but you can add other content here if needed.
-                      ],
+                        );
+                      },
+                      child: MainInfoCard(
+                        count: '${matchedUsers.length}',
+                        title: 'Matched',
+                        isMobile: isMobile,
+                      ),
                     ),
                   ),
+                  const SizedBox(width: 20),
+                  Expanded(
+                    child: MainInfoCard(
+                      count: '$interestedUsersCount',
+                      title: 'Interested Users',
+                      isMobile: isMobile,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 30),
+
+            // Card Swiper (Fills horizontal space)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20.0),
+              child: SizedBox(
+                // Max height for mobile card swiper
+                height: MediaQuery.sizeOf(context).height * 0.60,
+                child: CardSwiper(
+                  // ... (Swiper properties remain the same)
+                  allowedSwipeDirection: const AllowedSwipeDirection.only(
+                    left: true,
+                    right: true,
+                    up: true,
+                  ),
+                  controller: _controller,
+                  cardsCount: people.length,
+                  onSwipe: (p, c, d) async {
+                    if (d == CardSwiperDirection.left) {
+                      await _handleSwipe('left', people[p!]);
+                    } else if (d == CardSwiperDirection.right) {
+                      await _handleSwipe('right', people[p!]);
+                      await loadInterestedUsers();
+                    } else if (d == CardSwiperDirection.top) {
+                      await _handleSwipe('up', people[p!]);
+                      await loadInterestedUsers();
+                    }
+                    return true;
+                  },
+                  onSwipeDirectionChange: (h, v) {
+                    const bumpFactor = 2.5;
+                    double newDislikeScale = 1.0;
+                    double newLikeScale = 1.0;
+                    double newSuperLikeScale = 1.0;
+
+                    if (h == CardSwiperDirection.left) {
+                      newDislikeScale = 1.0 + (10 / 100 * bumpFactor);
+                      setState(() {
+                        swipeIconColor = Colors.red;
+                      });
+                    } else if (h == CardSwiperDirection.right) {
+                      newLikeScale = 1.0 + (10 / 100 * bumpFactor);
+                    } else if (v == CardSwiperDirection.top ||
+                        h == CardSwiperDirection.top) {
+                      newSuperLikeScale = 1.0 + (10 / 100 * bumpFactor);
+                    }
+                    setState(() {
+                      _dislikeButtonScale = newDislikeScale;
+                      _likeButtonScale = newLikeScale;
+                      _superLikeButtonScale = newSuperLikeScale;
+                    });
+                  },
+                  cardBuilder: (context, index, pX, pY) {
+                    final person = people[index];
+                    num dragAmount = pX;
+                    bool showLike = dragAmount > 0.1;
+                    bool showNope = dragAmount < -0.1;
+                    return SwipeCard(
+                      name: person.name,
+                      bio: person.description ?? '',
+                      imageUrl: person.imageUrl ?? 'assets/images/Suzy.jpeg',
+                      interests: person.interests ?? [],
+                      skills: person.skills ?? [],
+                      like: showLike,
+                      nope: showNope,
+                      isMobile: isMobile, // Pass mobile flag to card
+                    );
+                  },
                 ),
               ),
-    );
+            ),
+            const SizedBox(height: 30),
+
+            // Button Row (Mobile: All buttons below the card)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // Dislike
+                buildIconButton(
+                  direction: CardSwiperDirection.left,
+                  icon: Icons.clear,
+                  iconColor: swipeIconColor,
+                  backgroundColor: const Color(0xffa6d5e6),
+                  iconSize: mobileIconSize,
+                  buttonSize: mobileButtonSize,
+                  scale: _dislikeButtonScale,
+                  onEnd: () {
+                    setState(() {
+                      swipeIconColor = const Color(0xff41515b);
+                    });
+                  },
+                ),
+                const SizedBox(width: 25),
+                // Like (Main Button)
+                buildIconButton(
+                  direction: CardSwiperDirection.right,
+                  icon: Icons.favorite,
+                  iconColor: Colors.white,
+                  backgroundColor: const Color(0xff30a7cc),
+                  iconSize: mobileLikeIconSize,
+                  buttonSize: mobileLikeSize,
+                  scale: _likeButtonScale,
+                  onEnd: () {},
+                ),
+                const SizedBox(width: 25),
+                // Super Like
+                buildIconButton(
+                  direction: CardSwiperDirection.top,
+                  icon: Icons.star,
+                  iconColor: const Color(0xff41515b),
+                  backgroundColor: const Color(0xffa6d5e6),
+                  iconSize: mobileIconSize,
+                  buttonSize: mobileButtonSize,
+                  scale: _superLikeButtonScale,
+                  onEnd: () {},
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+          ],
+        ),
+      );
+    } else {
+      // -----------------------------------------------------
+      // 💻 WEB LAYOUT: Info Cards above, Buttons on Sides of Swiper
+      // -----------------------------------------------------
+      mainContent = SingleChildScrollView(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              maxWidth: _kMaxSwiperAreaWidth, // Wider max width
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Info Cards Header
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 20.0,
+                    horizontal: 25.0,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => MatchedUserList(),
+                              ),
+                            );
+                          },
+                          child: MainInfoCard(
+                            count: '${matchedUsers.length}',
+                            title: 'Matched',
+                            isMobile: isMobile,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 20),
+                      Expanded(
+                        child: MainInfoCard(
+                          count: '$interestedUsersCount',
+                          title: 'Interested Users',
+                          isMobile: isMobile,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 30),
+
+                // Main Swiper and Side Buttons in a single Row
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Left Button Group (Dislike)
+                    buildIconButton(
+                      direction: CardSwiperDirection.left,
+                      icon: Icons.clear,
+                      iconColor: swipeIconColor,
+                      backgroundColor: const Color(0xffa6d5e6),
+                      iconSize: mobileIconSize,
+                      buttonSize: mobileButtonSize,
+                      scale: _dislikeButtonScale,
+                      onEnd: () {
+                        setState(() {
+                          swipeIconColor = const Color(0xff41515b);
+                        });
+                      },
+                    ),
+                    const SizedBox(width: 40),
+
+                    // Center Swiper Card
+                    SizedBox(
+                      width: _kCardWidth, // Fixed width for the card
+                      height:
+                          MediaQuery.sizeOf(context).height * 0.85 > 800
+                              ? 800
+                              : MediaQuery.sizeOf(context).height * 0.85,
+                      child: CardSwiper(
+                        // ... (Swiper properties remain the same)
+                        allowedSwipeDirection: const AllowedSwipeDirection.only(
+                          left: true,
+                          right: true,
+                          up: true,
+                        ),
+                        controller: _controller,
+                        cardsCount: people.length,
+                        onSwipe: (p, c, d) async {
+                          if (d == CardSwiperDirection.left) {
+                            await _handleSwipe('left', people[p!]);
+                          } else if (d == CardSwiperDirection.right) {
+                            await _handleSwipe('right', people[p!]);
+                            await loadInterestedUsers();
+                          } else if (d == CardSwiperDirection.top) {
+                            await _handleSwipe('up', people[p!]);
+                            await loadInterestedUsers();
+                          }
+                          return true;
+                        },
+                        onSwipeDirectionChange: (h, v) {
+                          const bumpFactor = 2.5;
+                          double newDislikeScale = 1.0;
+                          double newLikeScale = 1.0;
+                          double newSuperLikeScale = 1.0;
+
+                          if (h == CardSwiperDirection.left) {
+                            newDislikeScale = 1.0 + (10 / 100 * bumpFactor);
+                            setState(() {
+                              swipeIconColor = Colors.red;
+                            });
+                          } else if (h == CardSwiperDirection.right) {
+                            newLikeScale = 1.0 + (10 / 100 * bumpFactor);
+                          } else if (v == CardSwiperDirection.top ||
+                              h == CardSwiperDirection.top) {
+                            newSuperLikeScale = 1.0 + (10 / 100 * bumpFactor);
+                          }
+                          setState(() {
+                            _dislikeButtonScale = newDislikeScale;
+                            _likeButtonScale = newLikeScale;
+                            _superLikeButtonScale = newSuperLikeScale;
+                          });
+                        },
+                        cardBuilder: (context, index, pX, pY) {
+                          final person = people[index];
+                          num dragAmount = pX;
+                          bool showLike = dragAmount > 0.1;
+                          bool showNope = dragAmount < -0.1;
+                          return SwipeCard(
+                            name: person.name,
+                            bio: person.description ?? '',
+                            imageUrl:
+                                person.imageUrl ?? 'assets/images/Suzy.jpeg',
+                            interests: person.interests ?? [],
+                            skills: person.skills ?? [],
+                            like: showLike,
+                            nope: showNope,
+                            isMobile: isMobile,
+                          );
+                        },
+                      ),
+                    ),
+
+                    const SizedBox(width: 40),
+
+                    // Right Button Group (Like and Super Like)
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Super Like (Top Button)
+                        buildIconButton(
+                          direction: CardSwiperDirection.top,
+                          icon: Icons.star,
+                          iconColor: const Color(0xff41515b),
+                          backgroundColor: const Color(0xffa6d5e6),
+                          iconSize: mobileIconSize,
+                          buttonSize: mobileButtonSize,
+                          scale: _superLikeButtonScale,
+                          onEnd: () {},
+                        ),
+                        const SizedBox(height: 30),
+
+                        // Like (Main Button)
+                        buildIconButton(
+                          direction: CardSwiperDirection.right,
+                          icon: Icons.favorite,
+                          iconColor: Colors.white,
+                          backgroundColor: const Color(0xff30a7cc),
+                          iconSize: mobileLikeIconSize,
+                          buttonSize: mobileLikeSize,
+                          scale: _likeButtonScale,
+                          onEnd: () {},
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 30),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Scaffold(backgroundColor: Colors.white, body: mainContent);
   }
 }
 
-// NOTE: MainInfoCard and SwipeCard definitions are assumed to be the same
-// as the previous successful response, as they only handle internal layout,
-// not the overall screen structure.
+// --- Modified Helper Widgets to accept isMobile flag ---
 
 class MainInfoCard extends StatelessWidget {
   final String count;
   final String title;
-  const MainInfoCard({super.key, required this.count, required this.title});
+  final bool isMobile; // Added for responsiveness
+  const MainInfoCard({
+    super.key,
+    required this.count,
+    required this.title,
+    this.isMobile = false,
+  });
 
   @override
   Widget build(BuildContext context) {
-    // 5. Removed reliance on MediaQuery for width, now relies on Expanded/Flex
     return Container(
-      // Max width is already handled by the parent ConstrainedBox.
-      // We set a fixed height and use all available width from the Expanded widget.
-      height: 70, // Slightly increased height for web
+      height: isMobile ? 60 : 70, // Smaller height on mobile
       decoration: BoxDecoration(
         color: const Color(0xff30a7cc),
         borderRadius: BorderRadius.circular(12),
@@ -465,8 +617,8 @@ class MainInfoCard extends StatelessWidget {
         children: [
           Text(
             count,
-            style: const TextStyle(
-              fontSize: 20, // Larger count font
+            style: TextStyle(
+              fontSize: isMobile ? 18 : 20, // Smaller count font on mobile
               color: Colors.white,
               fontWeight: FontWeight.bold,
               fontFamily: 'Teachers-B',
@@ -474,8 +626,8 @@ class MainInfoCard extends StatelessWidget {
           ),
           Text(
             title,
-            style: const TextStyle(
-              fontSize: 14, // Larger title font
+            style: TextStyle(
+              fontSize: isMobile ? 12 : 14, // Smaller title font on mobile
               color: Colors.white,
               fontFamily: 'Teachers-R',
             ),
@@ -494,6 +646,7 @@ class SwipeCard extends StatelessWidget {
   final List<String> skills;
   final bool like;
   final bool nope;
+  final bool isMobile; // Added for responsiveness
 
   const SwipeCard({
     super.key,
@@ -504,34 +657,35 @@ class SwipeCard extends StatelessWidget {
     required this.skills,
     required this.like,
     required this.nope,
+    this.isMobile = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final imageH = isMobile ? 250.0 : 300.0;
+    final nameFS = isMobile ? 30.0 : 36.0;
+    final headerFS = isMobile ? 16.0 : 18.0;
+
     return Stack(
       children: [
         Card(
           color: const Color(0xffa6d5e6),
-          // Set a fixed radius, ensuring it looks good on a larger screen
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          elevation: 8, // Added elevation for a more prominent card look
+          elevation: isMobile ? 4 : 8, // Less elevation on mobile
           child: SingleChildScrollView(
-            // Added SingleChildScrollView to prevent overflow on tall screens
             child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start, // Align text content to the left
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Image Section
                 ClipRRect(
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(16),
-                  ), // Clip only top corners
+                  ),
                   child: Image.asset(
                     imageUrl,
-                    // Use a constrained height for the image that scales well
-                    height: 300,
+                    height: imageH,
                     width: double.infinity,
                     fit: BoxFit.cover,
                   ),
@@ -543,11 +697,11 @@ class SwipeCard extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 20.0),
                   child: Text(
                     name,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: 'Teachers-B',
-                      fontSize: 36, // Larger name font
+                      fontSize: nameFS,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xff3a4a52),
+                      color: const Color(0xff3a4a52),
                     ),
                   ),
                 ),
@@ -562,7 +716,7 @@ class SwipeCard extends StatelessWidget {
                           : Text(
                             'Interests',
                             style: TextStyle(
-                              fontSize: 18, // Larger header font
+                              fontSize: headerFS,
                               color: Colors.blueGrey[700],
                               fontWeight: FontWeight.bold,
                               fontFamily: 'Teachers-SB',
@@ -573,7 +727,7 @@ class SwipeCard extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 20.0),
                   child: Wrap(
                     alignment: WrapAlignment.start,
-                    spacing: 8, // Increased spacing
+                    spacing: 8,
                     runSpacing: 8,
                     children:
                         interests
@@ -584,7 +738,7 @@ class SwipeCard extends StatelessWidget {
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontFamily: 'Teachers-SB',
-                                    fontSize: 14, // Slightly larger chip text
+                                    fontSize: 13,
                                   ),
                                 ),
                                 backgroundColor: const Color(0xff30a7cc),
@@ -604,7 +758,7 @@ class SwipeCard extends StatelessWidget {
                           : Text(
                             'Skills',
                             style: TextStyle(
-                              fontSize: 18, // Larger header font
+                              fontSize: headerFS,
                               color: Colors.blueGrey[700],
                               fontWeight: FontWeight.bold,
                               fontFamily: 'Teachers-SB',
@@ -614,7 +768,7 @@ class SwipeCard extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20.0),
                   child: Wrap(
-                    spacing: 8, // Increased spacing
+                    spacing: 8,
                     runSpacing: 8,
                     children:
                         skills
@@ -625,7 +779,7 @@ class SwipeCard extends StatelessWidget {
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontFamily: 'Teachers-SB',
-                                    fontSize: 14, // Slightly larger chip text
+                                    fontSize: 13,
                                   ),
                                 ),
                                 backgroundColor: const Color(0xff30a7cc),
@@ -662,12 +816,12 @@ class SwipeCard extends StatelessWidget {
                           ),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Text(
+                        child: Text(
                           'LIKE',
                           style: TextStyle(
                             color: Colors.greenAccent,
                             fontWeight: FontWeight.bold,
-                            fontSize: 32, // Larger text
+                            fontSize: isMobile ? 24 : 32,
                             fontFamily: 'Teachers-B',
                           ),
                         ),
@@ -688,12 +842,12 @@ class SwipeCard extends StatelessWidget {
                           border: Border.all(color: Colors.redAccent, width: 4),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Text(
+                        child: Text(
                           'NOPE',
                           style: TextStyle(
                             color: Colors.redAccent,
                             fontWeight: FontWeight.bold,
-                            fontSize: 32, // Larger text
+                            fontSize: isMobile ? 24 : 32,
                             fontFamily: 'Teachers-B',
                           ),
                         ),
