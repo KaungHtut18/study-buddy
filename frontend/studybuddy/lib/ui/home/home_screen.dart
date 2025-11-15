@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:studybuddy/modela/user.dart';
 import 'package:studybuddy/services/service_provider.dart';
+import 'package:studybuddy/ui/home/matched_users.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -104,7 +105,9 @@ class _HomeScreenState extends State<HomeScreen> {
     );
     try {
       final response = await http.get(
-        Uri.parse('http://localhost:8080/api/interested-users?id=${serviceProvider.userId}'),
+        Uri.parse(
+          'http://localhost:8080/api/interested-users?id=${serviceProvider.userId}',
+        ),
         headers: {
           'Content-Type': 'application/json',
           'user-id': '${serviceProvider.userId}',
@@ -162,6 +165,8 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final matchedCount = context.watch<ServiceProvider>().matchedCount;
+    List<String> matchedUsers =
+        Provider.of<ServiceProvider>(context).matchedUsers;
     return Scaffold(
       backgroundColor: Colors.white,
       body:
@@ -187,14 +192,30 @@ class _HomeScreenState extends State<HomeScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        MainInfoCard(count: '$matchedCount', title: 'Matches'),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => MatchedUserList(),
+                              ),
+                            );
+                          },
+                          // child: MainInfoCard(
+                          //   count: '$matchedCount',
+                          //   title: 'Matches',
+                          // ),
+                          child: MainInfoCard(
+                            count: '${matchedUsers.length}',
+                            title: 'Matched',
+                          ),
+                        ),
                         MainInfoCard(
                           count: '$interestedUsersCount',
                           title: 'Interested Users',
                         ),
                       ],
                     ),
-                    const SizedBox(height: 20),
                     SizedBox(
                       height: MediaQuery.sizeOf(context).height * 0.65,
                       child: CardSwiper(
@@ -355,7 +376,7 @@ class MainInfoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 120,
+      width: MediaQuery.of(context).size.width * 0.3,
       height: 60,
       decoration: BoxDecoration(
         color: const Color(0xff30a7cc),
