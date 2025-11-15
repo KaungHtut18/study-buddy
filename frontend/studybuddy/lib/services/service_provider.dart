@@ -2,11 +2,18 @@ import 'package:flutter/foundation.dart';
 
 class ServiceProvider with ChangeNotifier {
   int _matchedCount = 0;
+  List<String> _matchedUsers = [];
 
   int get matchedCount => _matchedCount;
-
+  List<String> get matchedUsers => _matchedUsers;
+  
   void setMatchedCount(int count) {
     _matchedCount = count;
+    notifyListeners();
+  }
+
+  void setMatchedUSers(String name){
+    _matchedUsers.add(name);
     notifyListeners();
   }
 
@@ -46,4 +53,19 @@ class ServiceProvider with ChangeNotifier {
     _inDetail = detail;
     notifyListeners();
   }
+
+  List<String> messageList = [];
+  void setMessageList(String name){
+    messageList.add(name);
+    notifyListeners();
+  }
+
+  Map<String, List<String>> messages = {};
+  void setMessages(String name, List<String> useMmessages){
+  messages.addAll({
+    name : useMmessages,
+  });
+  notifyListeners();
+  }
+  
 }

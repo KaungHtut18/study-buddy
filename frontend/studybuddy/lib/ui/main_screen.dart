@@ -36,7 +36,15 @@ class _MainScreenState extends State<MainScreen> {
     
     _matchService.start((count) {
       serviceProvider.setMatchedCount(count);
-    }, serviceProvider.userId);
+    }, (data){
+      for (var user in data) {
+        String name = user['userName'];
+        if(!serviceProvider.matchedUsers.contains(name)){
+             serviceProvider.setMatchedUSers(name);
+        }
+       
+      }
+    },serviceProvider.userId);
   }
 
   @override

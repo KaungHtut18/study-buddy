@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:studybuddy/services/service_provider.dart';
 import 'package:studybuddy/ui/home/chat_interface.dart';
+import 'package:studybuddy/ui/home/normalChar.dart';
 
 class ChatScreen extends StatelessWidget {
   const ChatScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final serviceProvider = Provider.of<ServiceProvider>(context);
     return Scaffold(
       body: Container(
         color: Colors.white,
@@ -38,43 +42,45 @@ class ChatScreen extends StatelessWidget {
                 showPin: true,
               ),
             ),
-            ChatListItem(
-              name: 'Alex Johnson',
-              message: 'Hey, are you free to study...',
-              time: '10:30 PM',
-              avatar: Container(
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(Icons.person, color: Colors.grey[600], size: 32),
-              ),
+            Column(
+              children:
+                  serviceProvider.messageList
+                      .map(
+                        (name) => GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) => NormalChat(
+                                      name: name,
+                                      message:
+                                          serviceProvider.messages[name]![0],
+                                    ),
+                              ),
+                            );
+                          },
+                          child: ChatListItem(
+                            name: name,
+                            message: serviceProvider.messages[name]![0],
+                            time: '10:30 PM',
+                            avatar: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.blue[100],
+                                shape: BoxShape.circle,
+                              ),
+                              child: Center(
+                                child: Text(
+                                  name[0].toUpperCase(),
+                                  style: TextStyle(fontSize: 15),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      )
+                      .toList(),
             ),
-            ChatListItem(
-              name: 'John',
-              message: 'Ok lets work on the project',
-              time: '10:30 PM',
-              avatar: Container(
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(Icons.person, color: Colors.grey[600], size: 32),
-              ),
-            ),
-            ChatListItem(
-              name: 'Maya',
-              message: 'Can you explain this topic for me?',
-              time: '10:30 PM',
-              avatar: Container(
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(Icons.person, color: Colors.grey[600], size: 32),
-              ),
-            ),
-            
           ],
         ),
       ),
