@@ -15,6 +15,7 @@ class MatchNotifierService {
   Timer? _timer;
   List<dynamic> _previousList = [];
   int count = 0;
+  List<dynamic> matchedUsers = [];
   int _currentUserId = 0; // Add this to track current user
 
   Future<void> init() async {
@@ -42,13 +43,13 @@ class MatchNotifierService {
     }
   }
 
-  void start(void Function(int) onCountUpdated, int userId) {
+  void start(void Function(int) onCountUpdated,void Function(List<dynamic>) getMathcedUsers, int userId) {
     stop();
     _currentUserId = userId; // Store the user ID
-    _fetchUsers(onCountUpdated, _currentUserId);
+    _fetchUsers(onCountUpdated,getMathcedUsers, _currentUserId);
     _timer = Timer.periodic(
       const Duration(seconds: 6),
-      (_) => _fetchUsers(onCountUpdated, _currentUserId), // Use stored user ID
+      (_) => _fetchUsers(onCountUpdated,getMathcedUsers, _currentUserId), // Use stored user ID
     );
   }
 
@@ -59,6 +60,7 @@ class MatchNotifierService {
 
   Future<void> _fetchUsers(
     void Function(int)? onCountUpdated,
+    void Function(List<dynamic>)? getMathcedUsers, 
     int userId,
   ) async {
     try {
@@ -75,8 +77,12 @@ class MatchNotifierService {
         final List<dynamic> data = body['data'];
         count = data.length;
 
-        if (onCountUpdated != null) {
+        if (onCountUpdated != null){
           onCountUpdated(count);
+        }
+
+        if( getMathcedUsers != null){
+           getMathcedUsers(data);
         }
 
         if (data.length > _previousList.length) {

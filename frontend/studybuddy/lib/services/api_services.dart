@@ -20,6 +20,8 @@ void handleResponse(
     case (201):
       onSuccess();
       break;
+    default:
+      showSnackBar(context, 'Invalid username or password!');
   }
 }
 
