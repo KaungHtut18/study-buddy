@@ -3,6 +3,9 @@ import 'package:studybuddy/ui/auth/login_screen.dart';
 import 'package:studybuddy/widgets/reusable_textform_field.dart';
 import 'package:studybuddy/widgets/reusable_textform_field_suffix.dart';
 
+// Define a constant for the maximum desired width of the form on a web screen
+const double _kMaxWebWidth = 450.0;
+
 class InitialRegisterScreen extends StatefulWidget {
   final PageController pageController;
   final TextEditingController nameController;
@@ -27,29 +30,36 @@ class _InitialRegisterScreenState extends State<InitialRegisterScreen> {
   bool _isChecked = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
-  List<String> mockUniversityList = [
-    'Mae Fah Luang University',
-    'Chiang Mai University',
-    'Mahidol University',
-  ];
+  // This mock list is not used in this screen's UI, but kept for context.
+  // List<String> mockUniversityList = ['...'];
 
   @override
   Widget build(BuildContext context) {
     return Form(
       key: _formKey,
       child: Scaffold(
-        body: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 50, horizontal: 25),
-          child: SingleChildScrollView(
-            child: Center(
+        // Set the background color for the entire web page
+        backgroundColor: const Color(0xFFF7F7F7),
+        body: Center(
+          // Constrain the width for a web-friendly card look
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: _kMaxWebWidth),
+            child: SingleChildScrollView(
+              // Add overall vertical padding
+              padding: const EdgeInsets.symmetric(
+                vertical: 40.0,
+                horizontal: 25.0,
+              ),
               child: Column(
+                // Align content to the start (left) for better form layout
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Logo and Titles (Centered)
                   Center(
                     child: Image.asset(
                       'assets/icons/sbuddy_icon.png',
-                      width: 122,
-                      height: 122,
+                      width: 100, // Slightly reduced size
+                      height: 100,
                     ),
                   ),
                   Center(
@@ -58,7 +68,7 @@ class _InitialRegisterScreenState extends State<InitialRegisterScreen> {
                       style: TextStyle(
                         fontFamily: 'Teachers-B',
                         fontWeight: FontWeight.bold,
-                        fontSize: 20,
+                        fontSize: 24, // Larger title for web
                         color: Colors.black,
                       ),
                     ),
@@ -68,18 +78,19 @@ class _InitialRegisterScreenState extends State<InitialRegisterScreen> {
                       'Join thousands of students',
                       style: TextStyle(
                         fontFamily: 'Teachers-M',
-                        fontSize: 14,
+                        fontSize: 16, // Larger subtitle for web
                         color: Color(0xFF6D6D6D),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 30),
+
+                  // Create Account Header
                   Text(
                     'Create Account',
-                    textAlign: TextAlign.start,
                     style: TextStyle(
                       fontFamily: 'Teachers-B',
-                      fontSize: 15,
+                      fontSize: 20, // Main section header
                       color: Colors.black,
                     ),
                   ),
@@ -88,11 +99,12 @@ class _InitialRegisterScreenState extends State<InitialRegisterScreen> {
                     'Sign up to start your learning journey',
                     style: TextStyle(
                       fontFamily: 'Teachers-M',
-                      fontSize: 14,
+                      fontSize: 16,
                       color: Color(0xFF6D6D6D),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 30), // Increased spacing for web
+                  // Full Name
                   Text(
                     'Full Name',
                     style: TextStyle(
@@ -101,14 +113,15 @@ class _InitialRegisterScreenState extends State<InitialRegisterScreen> {
                       color: Colors.black,
                     ),
                   ),
-                  const SizedBox(height: 5),
+                  const SizedBox(height: 8),
                   reusableTextFormField(
                     controller: widget.nameController,
                     hintText: 'Enter your full name',
                     prefixIcon: Icons.person,
                     errorText: 'Please enter your full name',
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 20), // Increased spacing
+                  // Email Address
                   Text(
                     'Email Address',
                     style: TextStyle(
@@ -117,14 +130,15 @@ class _InitialRegisterScreenState extends State<InitialRegisterScreen> {
                       color: Colors.black,
                     ),
                   ),
-                  const SizedBox(height: 5),
+                  const SizedBox(height: 8),
                   reusableTextFormField(
                     controller: widget.emailController,
                     hintText: 'Enter your email address',
                     prefixIcon: Icons.email,
                     errorText: 'Please enter a valid email address',
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 20), // Increased spacing
+                  // Password
                   Text(
                     'Password',
                     style: TextStyle(
@@ -133,7 +147,7 @@ class _InitialRegisterScreenState extends State<InitialRegisterScreen> {
                       color: Colors.black,
                     ),
                   ),
-                  const SizedBox(height: 5),
+                  const SizedBox(height: 8),
                   reusableTextFormFieldWithSuffixIcon(
                     hintText: 'Enter your password',
                     obscureText: _obscurePassword,
@@ -154,20 +168,19 @@ class _InitialRegisterScreenState extends State<InitialRegisterScreen> {
                       return null;
                     },
                   ),
-                  const SizedBox(height: 10),
-
+                  const SizedBox(height: 20), // Increased spacing
+                  // Confirm Password
                   Text(
-                    'Confirm Passowrd',
+                    'Confirm Password', // Corrected typo in label
                     style: TextStyle(
                       fontFamily: 'Teachers-SB',
                       fontSize: 14,
                       color: Colors.black,
                     ),
                   ),
-                  const SizedBox(height: 5),
-                  // want to check condition if two text fields are the same or not
+                  const SizedBox(height: 8),
                   reusableTextFormFieldWithSuffixIcon(
-                    hintText: 'Please enter your confirm password',
+                    hintText: 'Please re-enter your password', // Adjusted hint
                     prefixIcon: Icons.lock,
                     obscureText: _obscureConfirmPassword,
                     toggleObscure: () {
@@ -186,59 +199,64 @@ class _InitialRegisterScreenState extends State<InitialRegisterScreen> {
                       return null;
                     },
                   ),
-                  const SizedBox(height: 10),
-                  CheckboxListTile(
-                    value: _isChecked,
-                    onChanged: (newValue) {
-                      setState(() {
-                        _isChecked = newValue ?? false;
-                      });
-                    },
-                    title: Text(
-                      'I agree to the Terms of Services and Privacy Policy',
-                      style: TextStyle(
-                        fontFamily: 'Teachers-M',
-                        fontSize: 12,
-                        color: Color(0xFF6D6D6D),
+                  const SizedBox(height: 20),
+
+                  // Terms and Conditions Checkbox
+                  // Removed `checkboxScaleFactor` and adjusted alignment for better web appearance
+                  Row(
+                    children: [
+                      SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: Checkbox(
+                          value: _isChecked,
+                          onChanged: (newValue) {
+                            setState(() {
+                              _isChecked = newValue ?? false;
+                            });
+                          },
+                          checkColor: Colors.white,
+                          activeColor: Color(0xFF6664F1), // Use a primary color
+                        ),
                       ),
-                    ),
-                    controlAffinity: ListTileControlAffinity.leading,
-                    checkboxScaleFactor: 0.7,
-                    checkColor: Color(0xFFB9B9B9),
-                    activeColor: Color(0xFF6D6D6D),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'I agree to the Terms of Services and Privacy Policy',
+                          style: TextStyle(
+                            fontFamily: 'Teachers-M',
+                            fontSize: 14, // Larger text for web
+                            color: Color(0xFF6D6D6D),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 10),
+
+                  const SizedBox(height: 35), // Increased spacing
+                  // Create Account Button
                   GestureDetector(
                     onTap: () {
                       if (_formKey.currentState!.validate()) {
                         if (!_isChecked) {
+                          // SnackBar is fine, but consider using a Dialog for critical web messages
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              backgroundColor: Colors.white,
+                              backgroundColor:
+                                  Colors.redAccent, // Better contrast for error
                               behavior: SnackBarBehavior.floating,
-                              dismissDirection: DismissDirection.horizontal,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
                               content: Text(
                                 'You must agree to our Terms and Conditions first',
                                 style: TextStyle(
                                   fontFamily: 'Teachers-M',
-                                  fontSize: 12,
-                                  color: Color(0xFF6D6D6D),
+                                  fontSize: 14,
+                                  color: Colors.white,
                                 ),
                               ),
                             ),
                           );
                         } else {
-                          setState(() {
-                            // widget.passwordController.clear();
-                            // widget.confirmPasswordController.clear();
-                            // _formKey.currentState!.reset();
-                            print(widget.nameController.text);
-                            print(widget.emailController.text);
-                            print(widget.confirmPasswordController.text);
-                          });
+                          // Navigate to the next page in the PageView
                           widget.pageController.animateToPage(
                             1, // SkillRegisterScreen index
                             duration: const Duration(milliseconds: 400),
@@ -248,7 +266,6 @@ class _InitialRegisterScreenState extends State<InitialRegisterScreen> {
                       }
                     },
                     child: Container(
-                      width: 370,
                       height: 60,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
@@ -264,14 +281,16 @@ class _InitialRegisterScreenState extends State<InitialRegisterScreen> {
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontFamily: 'Teachers-B',
-                            fontSize: 16,
+                            fontSize: 18, // Larger text for web
                             color: Colors.white,
                           ),
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 30),
+
+                  // Login Link
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -279,12 +298,11 @@ class _InitialRegisterScreenState extends State<InitialRegisterScreen> {
                         'Already have an account? ',
                         style: TextStyle(
                           fontFamily: 'Teachers-M',
-                          fontSize: 12,
+                          fontSize: 14,
                           color: Color(0xFF7C7C7C),
                         ),
                       ),
                       GestureDetector(
-                        //to navigate to login screen
                         onTap: () {
                           Navigator.pushAndRemoveUntil(
                             context,
@@ -298,7 +316,7 @@ class _InitialRegisterScreenState extends State<InitialRegisterScreen> {
                           'Sign In',
                           style: TextStyle(
                             fontFamily: 'Teachers-B',
-                            fontSize: 12,
+                            fontSize: 14,
                             color: Color(0xFF7B7B7B),
                           ),
                         ),
@@ -306,6 +324,8 @@ class _InitialRegisterScreenState extends State<InitialRegisterScreen> {
                     ],
                   ),
                   const SizedBox(height: 20),
+
+                  // Footer Text (Simplified and centered for better legibility)
                   Center(
                     child: Text(
                       'By signing up, you agree to our Terms and Privacy Policy',

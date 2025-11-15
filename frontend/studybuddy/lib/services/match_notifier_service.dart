@@ -3,9 +3,11 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:studybuddy/global_variables.dart';
 
 class MatchNotifierService {
-  static final MatchNotifierService _instance = MatchNotifierService._internal();
+  static final MatchNotifierService _instance =
+      MatchNotifierService._internal();
   factory MatchNotifierService() => _instance;
   MatchNotifierService._internal();
 
@@ -38,18 +40,27 @@ class MatchNotifierService {
     if (Platform.isIOS) {
       await _notificationsPlugin
           .resolvePlatformSpecificImplementation<
-              IOSFlutterLocalNotificationsPlugin>()
+            IOSFlutterLocalNotificationsPlugin
+          >()
           ?.requestPermissions(alert: true, badge: true, sound: true);
     }
   }
 
-  void start(void Function(int) onCountUpdated,void Function(List<dynamic>) getMathcedUsers, int userId) {
+  void start(
+    void Function(int) onCountUpdated,
+    void Function(List<dynamic>) getMathcedUsers,
+    int userId,
+  ) {
     stop();
     _currentUserId = userId; // Store the user ID
-    _fetchUsers(onCountUpdated,getMathcedUsers, _currentUserId);
+    _fetchUsers(onCountUpdated, getMathcedUsers, _currentUserId);
     _timer = Timer.periodic(
       const Duration(seconds: 6),
-      (_) => _fetchUsers(onCountUpdated,getMathcedUsers, _currentUserId), // Use stored user ID
+      (_) => _fetchUsers(
+        onCountUpdated,
+        getMathcedUsers,
+        _currentUserId,
+      ), // Use stored user ID
     );
   }
 
@@ -60,29 +71,29 @@ class MatchNotifierService {
 
   Future<void> _fetchUsers(
     void Function(int)? onCountUpdated,
-    void Function(List<dynamic>)? getMathcedUsers, 
+    void Function(List<dynamic>)? getMathcedUsers,
     int userId,
   ) async {
     try {
       print('Fetching matches for user: $userId'); // Debug log
-      
+
       final response = await http.get(
-        Uri.parse("http://localhost:8080/api/matched-users?id=$userId"),
+        Uri.parse("$uri/api/matched-users?id=$userId"),
         headers: {'Content-Type': 'application/json', 'user-id': '$userId'},
       );
-      
+
       if (response.statusCode == 200) {
         print('Matches fetched for user $userId: ${response.body}');
         final dynamic body = jsonDecode(response.body);
         final List<dynamic> data = body['data'];
         count = data.length;
 
-        if (onCountUpdated != null){
+        if (onCountUpdated != null) {
           onCountUpdated(count);
         }
 
-        if( getMathcedUsers != null){
-           getMathcedUsers(data);
+        if (getMathcedUsers != null) {
+          getMathcedUsers(data);
         }
 
         if (data.length > _previousList.length) {
@@ -103,12 +114,12 @@ class MatchNotifierService {
   Future<void> _showNotification(String title, String body) async {
     const AndroidNotificationDetails androidDetails =
         AndroidNotificationDetails(
-      'matches_channel',
-      'Matches',
-      channelDescription: 'Notifies when new matches appear',
-      importance: Importance.max,
-      priority: Priority.high,
-    );
+          'matches_channel',
+          'Matches',
+          channelDescription: 'Notifies when new matches appear',
+          importance: Importance.max,
+          priority: Priority.high,
+        );
 
     const DarwinNotificationDetails iosDetails = DarwinNotificationDetails();
 

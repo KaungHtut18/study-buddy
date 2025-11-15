@@ -8,6 +8,12 @@ import 'package:provider/provider.dart';
 import 'package:studybuddy/modela/user.dart';
 import 'package:studybuddy/services/service_provider.dart';
 import 'package:studybuddy/ui/home/matched_users.dart';
+import 'package:studybuddy/global_variables.dart';
+
+// Define a constant for the maximum desired width of the entire swipe area on a web screen
+// Increased to allow space for controls on the sides of the card.
+const double _kMaxSwiperAreaWidth = 900.0;
+const double _kCardWidth = 450.0; // Fixed width for the swipe card
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -19,6 +25,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final _controller = CardSwiperController();
 
+  // ... (unchanged state variables and API methods - omitted for brevity)
   double _dislikeButtonScale = 1.0;
   double _likeButtonScale = 1.0;
   double _superLikeButtonScale = 1.0;
@@ -51,9 +58,6 @@ class _HomeScreenState extends State<HomeScreen> {
     loadInterestedUsers();
   }
 
-  //api/interested-users?id=1
-  //api/interested-users(patch) targetUserId
-
   Future<void> loadPeople() async {
     final serviceProvider = Provider.of<ServiceProvider>(
       context,
@@ -61,7 +65,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
     try {
       final response = await http.get(
-        Uri.parse('http://localhost:8080/api/users?count=20'),
+        Uri.parse('$uri/api/users?count=20'),
         headers: {
           'user-id': '${serviceProvider.userId}',
           'Content-Type': 'application/json',
@@ -105,9 +109,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
     try {
       final response = await http.get(
-        Uri.parse(
-          'http://localhost:8080/api/interested-users?id=${serviceProvider.userId}',
-        ),
+        Uri.parse('$uri/api/interested-users?id=${serviceProvider.userId}'),
         headers: {
           'Content-Type': 'application/json',
           'user-id': '${serviceProvider.userId}',
@@ -136,7 +138,7 @@ class _HomeScreenState extends State<HomeScreen> {
       listen: false,
     );
     String targetUserId = user.id.toString();
-    String apiUrl = 'http://localhost:8080/api/interested-users';
+    String apiUrl = '$uri/api/interested-users';
 
     if (direction == 'right' || direction == 'up') {
       try {
@@ -164,9 +166,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final matchedCount = context.watch<ServiceProvider>().matchedCount;
     List<String> matchedUsers =
         Provider.of<ServiceProvider>(context).matchedUsers;
+
     return Scaffold(
       backgroundColor: Colors.white,
       body:
@@ -180,193 +182,267 @@ class _HomeScreenState extends State<HomeScreen> {
                   'No more users to swipe right now.\nPlease check back later!',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 18,
                     color: Color(0xff3a4a52),
                     fontFamily: 'Teachers-R',
                   ),
                 ),
               )
               : SingleChildScrollView(
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => MatchedUserList(),
-                              ),
-                            );
-                          },
-                          // child: MainInfoCard(
-                          //   count: '$matchedCount',
-                          //   title: 'Matches',
-                          // ),
-                          child: MainInfoCard(
-                            count: '${matchedUsers.length}',
-                            title: 'Matched',
-                          ),
-                        ),
-                        MainInfoCard(
-                          count: '$interestedUsersCount',
-                          title: 'Interested Users',
-                        ),
-                      ],
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      maxWidth: _kMaxSwiperAreaWidth, // Wider max width
                     ),
-                    SizedBox(
-                      height: MediaQuery.sizeOf(context).height * 0.65,
-                      child: CardSwiper(
-                        allowedSwipeDirection: const AllowedSwipeDirection.only(
-                          left: true,
-                          right: true,
-                          up: true,
-                        ),
-                        controller: _controller,
-                        cardsCount: people.length,
-                        onSwipe: (
-                          previousIndex,
-                          currentIndex,
-                          direction,
-                        ) async {
-                          if (direction == CardSwiperDirection.left) {
-                            await _handleSwipe('left', people[previousIndex]);
-                          } else if (direction == CardSwiperDirection.right) {
-                            await _handleSwipe('right', people[previousIndex]);
-                            await loadInterestedUsers();
-                          } else if (direction == CardSwiperDirection.top) {
-                            await _handleSwipe('up', people[previousIndex]);
-                            await loadInterestedUsers();
-                          }
-                          return true;
-                        },
-                        onSwipeDirectionChange: (
-                          horizontalDirection,
-                          verticalDirection,
-                        ) {
-                          const bumpFactor = 2.5;
-                          double newDislikeScale = 1.0;
-                          double newLikeScale = 1.0;
-                          double newSuperLikeScale = 1.0;
-
-                          if (horizontalDirection == CardSwiperDirection.left) {
-                            newDislikeScale = 1.0 + (10 / 100 * bumpFactor);
-                            setState(() {
-                              swipeIconColor = Colors.red;
-                            });
-                          } else if (horizontalDirection ==
-                              CardSwiperDirection.right) {
-                            newLikeScale = 1.0 + (10 / 100 * bumpFactor);
-                            print('right');
-                          } else if (verticalDirection ==
-                                  CardSwiperDirection.top ||
-                              horizontalDirection == CardSwiperDirection.top) {
-                            newSuperLikeScale = 1.0 + (10 / 100 * bumpFactor);
-                          }
-
-                          setState(() {
-                            _dislikeButtonScale = newDislikeScale;
-                            _likeButtonScale = newLikeScale;
-                            _superLikeButtonScale = newSuperLikeScale;
-                          });
-                        },
-                        cardBuilder: (
-                          context,
-                          index,
-                          percentThresholdX,
-                          percentThresholdY,
-                        ) {
-                          final person = people[index];
-                          num dragAmount = percentThresholdX;
-                          bool showLike = dragAmount > 0.1; // drag right
-                          bool showNope = dragAmount < -0.1; // drag left
-
-                          return SwipeCard(
-                            name: person.name,
-                            bio: person.description ?? '',
-                            imageUrl:
-                                person.imageUrl ?? 'assets/images/Suzy.jpeg',
-                            interests: person.interests ?? [],
-                            skills: person.skills ?? [],
-                            like: showLike,
-                            nope: showNope,
-                          );
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
+                    child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        AnimatedScale(
-                          onEnd: () {
-                            setState(() {
-                              swipeIconColor = const Color(0xff41515b);
-                            });
-                          },
-                          scale: _dislikeButtonScale,
-                          duration: const Duration(milliseconds: 100),
-                          child: IconButton(
-                            icon: Icon(
-                              Icons.clear,
-                              color: swipeIconColor,
-                              size: 28,
-                            ),
-                            style: IconButton.styleFrom(
-                              backgroundColor: const Color(0xffa6d5e6),
-                            ),
-                            onPressed: () {
-                              _controller.swipe(CardSwiperDirection.left);
-                            },
+                        // 1. Info Cards Header
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 20.0,
+                            horizontal: 25.0,
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              Expanded(
+                                child: GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => MatchedUserList(),
+                                      ),
+                                    );
+                                  },
+                                  child: MainInfoCard(
+                                    count: '${matchedUsers.length}',
+                                    title: 'Matched',
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 20),
+                              Expanded(
+                                child: MainInfoCard(
+                                  count: '$interestedUsersCount',
+                                  title: 'Interested Users',
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(width: 20),
-                        AnimatedScale(
-                          scale: _likeButtonScale,
-                          duration: const Duration(milliseconds: 100),
-                          child: IconButton(
-                            icon: const Icon(
-                              Icons.favorite,
-                              color: Colors.white,
-                              size: 40,
+                        const SizedBox(height: 30),
+
+                        // 2. Main Swiper and Side Buttons in a single Row
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            // --- Left Button Group (Dislike) ---
+                            AnimatedScale(
+                              onEnd: () {
+                                setState(() {
+                                  swipeIconColor = const Color(0xff41515b);
+                                });
+                              },
+                              scale: _dislikeButtonScale,
+                              duration: const Duration(milliseconds: 100),
+                              child: IconButton(
+                                icon: Icon(
+                                  Icons.clear,
+                                  color: swipeIconColor,
+                                  size: 35,
+                                ),
+                                style: IconButton.styleFrom(
+                                  backgroundColor: const Color(0xffa6d5e6),
+                                  fixedSize: const Size(60, 60),
+                                ),
+                                onPressed: () {
+                                  _controller.swipe(CardSwiperDirection.left);
+                                },
+                              ),
                             ),
-                            style: IconButton.styleFrom(
-                              backgroundColor: const Color(0xff30a7cc),
+                            const SizedBox(
+                              width: 40,
+                            ), // Spacing between button and card
+                            // --- Center Swiper Card ---
+                            SizedBox(
+                              width: _kCardWidth, // Fixed width for the card
+                              height:
+                                  MediaQuery.sizeOf(context).height * 0.85 > 800
+                                      ? 800
+                                      : MediaQuery.sizeOf(context).height *
+                                          0.85, // Max height
+                              child: CardSwiper(
+                                // Swiper setup (omitted for brevity)
+                                allowedSwipeDirection:
+                                    const AllowedSwipeDirection.only(
+                                      left: true,
+                                      right: true,
+                                      up: true,
+                                    ),
+                                controller: _controller,
+                                cardsCount: people.length,
+                                onSwipe: (
+                                  previousIndex,
+                                  currentIndex,
+                                  direction,
+                                ) async {
+                                  if (direction == CardSwiperDirection.left) {
+                                    await _handleSwipe(
+                                      'left',
+                                      people[previousIndex],
+                                    );
+                                  } else if (direction ==
+                                      CardSwiperDirection.right) {
+                                    await _handleSwipe(
+                                      'right',
+                                      people[previousIndex],
+                                    );
+                                    await loadInterestedUsers();
+                                  } else if (direction ==
+                                      CardSwiperDirection.top) {
+                                    await _handleSwipe(
+                                      'up',
+                                      people[previousIndex],
+                                    );
+                                    await loadInterestedUsers();
+                                  }
+                                  return true;
+                                },
+                                onSwipeDirectionChange: (
+                                  horizontalDirection,
+                                  verticalDirection,
+                                ) {
+                                  const bumpFactor = 2.5;
+                                  double newDislikeScale = 1.0;
+                                  double newLikeScale = 1.0;
+                                  double newSuperLikeScale = 1.0;
+
+                                  if (horizontalDirection ==
+                                      CardSwiperDirection.left) {
+                                    newDislikeScale =
+                                        1.0 + (10 / 100 * bumpFactor);
+                                    setState(() {
+                                      swipeIconColor = Colors.red;
+                                    });
+                                  } else if (horizontalDirection ==
+                                      CardSwiperDirection.right) {
+                                    newLikeScale =
+                                        1.0 + (10 / 100 * bumpFactor);
+                                  } else if (verticalDirection ==
+                                          CardSwiperDirection.top ||
+                                      horizontalDirection ==
+                                          CardSwiperDirection.top) {
+                                    newSuperLikeScale =
+                                        1.0 + (10 / 100 * bumpFactor);
+                                  }
+
+                                  setState(() {
+                                    _dislikeButtonScale = newDislikeScale;
+                                    _likeButtonScale = newLikeScale;
+                                    _superLikeButtonScale = newSuperLikeScale;
+                                  });
+                                },
+                                cardBuilder: (
+                                  context,
+                                  index,
+                                  percentThresholdX,
+                                  percentThresholdY,
+                                ) {
+                                  final person = people[index];
+                                  num dragAmount = percentThresholdX;
+                                  bool showLike =
+                                      dragAmount > 0.1; // drag right
+                                  bool showNope =
+                                      dragAmount < -0.1; // drag left
+
+                                  return SwipeCard(
+                                    name: person.name,
+                                    bio: person.description ?? '',
+                                    imageUrl:
+                                        person.imageUrl ??
+                                        'assets/images/Suzy.jpeg',
+                                    interests: person.interests ?? [],
+                                    skills: person.skills ?? [],
+                                    like: showLike,
+                                    nope: showNope,
+                                  );
+                                },
+                              ),
                             ),
-                            onPressed: () {
-                              _controller.swipe(CardSwiperDirection.right);
-                            },
-                          ),
+
+                            const SizedBox(
+                              width: 40,
+                            ), // Spacing between card and button
+                            // --- Right Button Group (Like and Super Like) ---
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                // Super Like (Top Button)
+                                AnimatedScale(
+                                  scale: _superLikeButtonScale,
+                                  duration: const Duration(milliseconds: 100),
+                                  child: IconButton(
+                                    icon: const Icon(
+                                      Icons.star,
+                                      color: Color(0xff41515b),
+                                      size: 35,
+                                    ),
+                                    style: IconButton.styleFrom(
+                                      backgroundColor: const Color(0xffa6d5e6),
+                                      fixedSize: const Size(60, 60),
+                                    ),
+                                    onPressed: () {
+                                      _controller.swipe(
+                                        CardSwiperDirection.top,
+                                      );
+                                    },
+                                  ),
+                                ),
+                                const SizedBox(height: 30),
+
+                                // Like (Main Button)
+                                AnimatedScale(
+                                  scale: _likeButtonScale,
+                                  duration: const Duration(milliseconds: 100),
+                                  child: IconButton(
+                                    icon: const Icon(
+                                      Icons.favorite,
+                                      color: Colors.white,
+                                      size: 50,
+                                    ),
+                                    style: IconButton.styleFrom(
+                                      backgroundColor: const Color(0xff30a7cc),
+                                      fixedSize: const Size(80, 80),
+                                    ),
+                                    onPressed: () {
+                                      _controller.swipe(
+                                        CardSwiperDirection.right,
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 20),
-                        AnimatedScale(
-                          scale: _superLikeButtonScale,
-                          duration: const Duration(milliseconds: 100),
-                          child: IconButton(
-                            icon: const Icon(
-                              Icons.star,
-                              color: Color(0xff41515b),
-                              size: 28,
-                            ),
-                            style: IconButton.styleFrom(
-                              backgroundColor: const Color(0xffa6d5e6),
-                            ),
-                            onPressed: () {
-                              _controller.swipe(CardSwiperDirection.top);
-                            },
-                          ),
-                        ),
+                        const SizedBox(height: 30),
+                        // The bottom button row is removed for simplicity,
+                        // but you can add other content here if needed.
                       ],
                     ),
-                  ],
+                  ),
                 ),
               ),
     );
   }
 }
+
+// NOTE: MainInfoCard and SwipeCard definitions are assumed to be the same
+// as the previous successful response, as they only handle internal layout,
+// not the overall screen structure.
 
 class MainInfoCard extends StatelessWidget {
   final String count;
@@ -375,9 +451,11 @@ class MainInfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 5. Removed reliance on MediaQuery for width, now relies on Expanded/Flex
     return Container(
-      width: MediaQuery.of(context).size.width * 0.3,
-      height: 60,
+      // Max width is already handled by the parent ConstrainedBox.
+      // We set a fixed height and use all available width from the Expanded widget.
+      height: 70, // Slightly increased height for web
       decoration: BoxDecoration(
         color: const Color(0xff30a7cc),
         borderRadius: BorderRadius.circular(12),
@@ -388,7 +466,7 @@ class MainInfoCard extends StatelessWidget {
           Text(
             count,
             style: const TextStyle(
-              fontSize: 16,
+              fontSize: 20, // Larger count font
               color: Colors.white,
               fontWeight: FontWeight.bold,
               fontFamily: 'Teachers-B',
@@ -397,7 +475,7 @@ class MainInfoCard extends StatelessWidget {
           Text(
             title,
             style: const TextStyle(
-              fontSize: 12,
+              fontSize: 14, // Larger title font
               color: Colors.white,
               fontFamily: 'Teachers-R',
             ),
@@ -434,61 +512,69 @@ class SwipeCard extends StatelessWidget {
       children: [
         Card(
           color: const Color(0xffa6d5e6),
-          child: Column(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.asset(
-                  imageUrl,
-                  height: MediaQuery.sizeOf(context).height * 0.3,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
+          // Set a fixed radius, ensuring it looks good on a larger screen
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 8, // Added elevation for a more prominent card look
+          child: SingleChildScrollView(
+            // Added SingleChildScrollView to prevent overflow on tall screens
+            child: Column(
+              crossAxisAlignment:
+                  CrossAxisAlignment.start, // Align text content to the left
+              children: [
+                // Image Section
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(16),
+                  ), // Clip only top corners
+                  child: Image.asset(
+                    imageUrl,
+                    // Use a constrained height for the image that scales well
+                    height: 300,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                name,
-                style: const TextStyle(
-                  fontFamily: 'Teachers-B',
-                  fontSize: 30,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xff3a4a52),
-                ),
-              ),
+                const SizedBox(height: 15),
 
-              // Text(
-              //   bio,
-              //   style: TextStyle(
-              //     fontSize: 14,
-              //     color: Colors.grey[700],
-              //     fontFamily: 'Teachers-R',
-              //   ),
-              // ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Align(
-                  alignment: Alignment.centerLeft,
+                // Name
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                  child: Text(
+                    name,
+                    style: const TextStyle(
+                      fontFamily: 'Teachers-B',
+                      fontSize: 36, // Larger name font
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xff3a4a52),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+
+                // Interests Section
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
                   child:
                       interests.isEmpty
-                          ? SizedBox()
+                          ? const SizedBox.shrink()
                           : Text(
                             'Interests',
                             style: TextStyle(
-                              fontSize: 16,
+                              fontSize: 18, // Larger header font
                               color: Colors.blueGrey[700],
                               fontWeight: FontWeight.bold,
                               fontFamily: 'Teachers-SB',
                             ),
                           ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                child: SizedBox(
-                  width: double.infinity,
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
                   child: Wrap(
                     alignment: WrapAlignment.start,
-                    spacing: 5,
+                    spacing: 8, // Increased spacing
+                    runSpacing: 8,
                     children:
                         interests
                             .map(
@@ -498,6 +584,7 @@ class SwipeCard extends StatelessWidget {
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontFamily: 'Teachers-SB',
+                                    fontSize: 14, // Slightly larger chip text
                                   ),
                                 ),
                                 backgroundColor: const Color(0xff30a7cc),
@@ -506,32 +593,29 @@ class SwipeCard extends StatelessWidget {
                             .toList(),
                   ),
                 ),
-              ),
-              SizedBox(height: 10),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Align(
-                  alignment: Alignment.centerLeft,
+                const SizedBox(height: 15),
+
+                // Skills Section
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
                   child:
-                      interests.isEmpty
-                          ? SizedBox()
+                      skills.isEmpty
+                          ? const SizedBox.shrink()
                           : Text(
                             'Skills',
                             style: TextStyle(
-                              fontSize: 16,
+                              fontSize: 18, // Larger header font
                               color: Colors.blueGrey[700],
                               fontWeight: FontWeight.bold,
                               fontFamily: 'Teachers-SB',
                             ),
                           ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                child: SizedBox(
-                  width: double.infinity,
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
                   child: Wrap(
-                    spacing: 5,
+                    spacing: 8, // Increased spacing
+                    runSpacing: 8,
                     children:
                         skills
                             .map(
@@ -541,6 +625,7 @@ class SwipeCard extends StatelessWidget {
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontFamily: 'Teachers-SB',
+                                    fontSize: 14, // Slightly larger chip text
                                   ),
                                 ),
                                 backgroundColor: const Color(0xff30a7cc),
@@ -549,11 +634,12 @@ class SwipeCard extends StatelessWidget {
                             .toList(),
                   ),
                 ),
-              ),
-              const SizedBox(height: 10),
-            ],
+                const SizedBox(height: 20),
+              ],
+            ),
           ),
         ),
+        // Like/Nope Overlay (unchanged)
         Positioned.fill(
           child: Padding(
             padding: const EdgeInsets.all(20),
@@ -581,7 +667,7 @@ class SwipeCard extends StatelessWidget {
                           style: TextStyle(
                             color: Colors.greenAccent,
                             fontWeight: FontWeight.bold,
-                            fontSize: 28,
+                            fontSize: 32, // Larger text
                             fontFamily: 'Teachers-B',
                           ),
                         ),
@@ -607,7 +693,7 @@ class SwipeCard extends StatelessWidget {
                           style: TextStyle(
                             color: Colors.redAccent,
                             fontWeight: FontWeight.bold,
-                            fontSize: 28,
+                            fontSize: 32, // Larger text
                             fontFamily: 'Teachers-B',
                           ),
                         ),
